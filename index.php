@@ -3,6 +3,7 @@
 session_start();
 
 require_once __DIR__ . '/controllers/UserController.php';
+require_once __DIR__ . '/controllers/ReservationController.php'; 
 
 $route = isset($_GET['route']) ? $_GET['route'] : 'home';
 
@@ -16,9 +17,12 @@ if ($route === 'home') {
 } else if ($route === 'login') {
     $userController = new UserController();
     $userController->login();
-} else if ($route === 'logout') { 
+} else if ($route === 'logout') {
     $userController = new UserController();
     $userController->logout();
+} else if ($route === 'reservation/create') { 
+    $reservationController = new ReservationController();
+    $reservationController->create();
 } else {
     echo "404 - Страница не найдена.";
 }
