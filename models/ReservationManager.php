@@ -29,4 +29,25 @@ class ReservationManager {
 
         return $stmt->execute($params);
     }
+    
+   public function getReservationsByUserId(int $user_id): array {
+        $stmt = $this->db->prepare("
+            SELECT * FROM RESERVATION WHERE user_id = :user_id
+        ");
+        $stmt->execute([':user_id' => $user_id]);
+        
+        $reservations = [];
+        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $reservation = new Reservation();
+            $reservation->setId($data['id'])
+                        ->setUserId($data['user_id'])
+                        ->setRestaurantId($data['restaurant_id'])
+                        ->setDate($data['reservation_date'])
+                        ->setTime($data['reservation_time'])
+                        ->setGuests($data['number_of_guests']);
+            $reservations[] = $reservation;
+        }
+
+        return $reservations;
+    }
 }
