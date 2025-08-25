@@ -1,25 +1,32 @@
 <?php
 
+require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/UserManager.php';
+
 class UserController {
     
     public function register() {
-        require_once __DIR__ . '/../models/User.php';
-        $userModel = new User();
+        $userManager = new UserManager();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $userId = $userModel->register(
-                $_POST['nom'],
-                $_POST['prenom'],
-                $_POST['email'],
-                $_POST['telephone'] ?? '',
-                $_POST['mot_de_passe']
-            );
+            $user = new User();
+            try {
+                $user->setNom($_POST['nom'])
+                     ->setPrenom($_POST['prenom'])
+                     ->setEmail($_POST['email'])
+                     ->setTelephone($_POST['telephone'] ?? '')
+                     ->setMotDePasse($_POST['mot_de_passe']);
 
-            if ($userId) {
-                header('Location: ?route=login');
-                die();
-            } else {
-                echo "Ошибка: Email уже существует или проблема с регистрацией.";
+                $userId = $userManager->register($user);
+
+                if ($userId) {
+                    header('Location: ?route=login');
+                    die();
+                } else {
+                    echo "Ошибка: Email уже существует или проблема с регистрацией.";
+                }
+            } catch (InvalidArgumentException $e) {
+                echo "Ошибка: " . $e->getMessage();
             }
         } else {
             require_once __DIR__ . '/../views/user/register.php';
@@ -27,15 +34,14 @@ class UserController {
     }
 
     public function login() {
-        require_once __DIR__ . '/../models/User.php';
-        $userModel = new User();
+        $userManager = new UserManager();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $loggedIn = $userModel->login($_POST['email'], $_POST['mot_de_passe']);
+            $loggedInUser = $userManager->login($_POST['email'], $_POST['mot_de_passe']);
 
-            if ($loggedIn) {
-                $_SESSION['user_id'] = $loggedIn['id'];
-                $_SESSION['user_nom'] = $loggedIn['nom'];
+            if ($loggedInUser) {
+                $_SESSION['user_id'] = $loggedInUser->getId();
+                $_SESSION['user_nom'] = $loggedInUser->getNom();
                 header('Location: ?route=home');
                 die();
             } else {
@@ -45,9 +51,10 @@ class UserController {
             require_once __DIR__ . '/../views/user/login.php';
         }
     }
-     public function logout() {
-        session_destroy(); 
-        header('Location: ?route=home'); 
+
+    public function logout() {
+        session_destroy();
+        header('Location: ?route=home');
         die();
     }
 }

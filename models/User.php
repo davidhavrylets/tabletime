@@ -1,53 +1,70 @@
 <?php
-// models/User.php
-
-require_once __DIR__ . '/../config/database.php';
 
 class User {
-    private $db;
+    private ?int $id = null;
+    private string $nom;
+    private string $prenom;
+    private string $email;
+    private string $telephone;
+    private string $mot_de_passe;
 
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getPdo();
+    // Геттеры
+    public function getId(): ?int {
+        return $this->id;
     }
 
-    public function register($nom, $prenom, $email, $telephone, $mot_de_passe) {
-        // Проверяем, существует ли email
-        $stmt = $this->db->prepare("SELECT id FROM UTILISATEUR WHERE email = :email");
-        $stmt->execute([':email' => $email]);
-        if ($stmt->fetch()) {
-            return false; // Email уже существует
-        }
-
-        $hashed_password = password_hash($mot_de_passe, PASSWORD_BCRYPT, ['cost' => 12]);
-
-        $stmt = $this->db->prepare("
-            INSERT INTO UTILISATEUR (nom, prenom, email, telephone, mot_de_passe)
-            VALUES (:nom, :prenom, :email, :telephone, :hashed_password)
-        ");
-        
-        $params = [
-            ':nom' => $nom,
-            ':prenom' => $prenom,
-            ':email' => $email,
-            ':telephone' => $telephone,
-            ':hashed_password' => $hashed_password
-        ];
-        
-        if ($stmt->execute($params)) {
-            return $this->db->lastInsertId();
-        }
-        return false;
+    public function getNom(): string {
+        return $this->nom;
     }
 
-    public function login($email, $mot_de_passe) {
-        $stmt = $this->db->prepare("SELECT * FROM UTILISATEUR WHERE email = :email");
-        $stmt->execute([':email' => $email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    public function getPrenom(): string {
+        return $this->prenom;
+    }
 
-        if ($user && password_verify($mot_de_passe, $user['mot_de_passe'])) {
-            return $user;
+    public function getEmail(): string {
+        return $this->email;
+    }
+
+    public function getTelephone(): string {
+        return $this->telephone;
+    }
+
+    public function getMotDePasse(): string {
+        return $this->mot_de_passe;
+    }
+
+    // Сеттеры
+    public function setId(int $id): self {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function setNom(string $nom): self {
+        $this->nom = trim($nom);
+        return $this;
+    }
+
+    public function setPrenom(string $prenom): self {
+        $this->prenom = trim($prenom);
+        return $this;
+    }
+
+    public function setEmail(string $email): self {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException("Invalid email format.");
         }
-        return false;
+        $this->email = $email;
+        return $this;
+    }
+
+    public function setTelephone(string $telephone): self {
+        $this->telephone = trim($telephone);
+        return $this;
+    }
+
+    public function setMotDePasse(string $mot_de_passe): self {
+        
+        $this->mot_de_passe = $mot_de_passe;
+        return $this;
     }
 }
