@@ -33,6 +33,11 @@ if ($route === 'home') {
 } else if ($route === 'restaurant/delete') { 
     $restaurantController = new RestaurantController();
     $restaurantController->delete();
+} else if ($route === 'restaurant/edit') { 
+    $restaurantController = new RestaurantController();
+    $restaurantController->edit();
+} else if ($route === 'restaurant/delete') {
+    
 } else {
     echo "404 - Страница не найдена.";
 }

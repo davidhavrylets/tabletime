@@ -43,6 +43,22 @@ class Restaurant {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function updateRestaurant($id, $nom, $adresse, $description) {
+        $sql = "UPDATE restaurant 
+                SET nom = :nom, adresse = :adresse, description = :description 
+                WHERE id = :id";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $stmt->bindParam(':nom', $nom);
+        $stmt->bindParam(':adresse', $adresse);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':id', $id);
+
+        return $stmt->execute();
+    }
+    
 public function deleteRestaurant($id) {
         
         if ($id == 1) {

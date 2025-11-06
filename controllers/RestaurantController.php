@@ -78,4 +78,39 @@ class RestaurantController {
         exit;
     } 
     
+    public function edit() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ?route=login');
+            exit;
+        }
+
+        $id = $_GET['id'] ?? null;
+        $restaurantModel = new Restaurant();
+        $restaurant = $restaurantModel->getRestaurantById($id); // Получаем текущие данные
+
+        if (!$restaurant) {
+            header('Location: ?route=restaurant/list');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nom = $_POST['nom'] ?? $restaurant['nom'];
+            $adresse = $_POST['adresse'] ?? $restaurant['adresse'];
+            $description = $_POST['description'] ?? $restaurant['description'];
+
+            $isUpdated = $restaurantModel->updateRestaurant($id, $nom, $adresse, $description);
+
+            if ($isUpdated) {
+                $_SESSION['success_message'] = "Ресторан '{$nom}' успешно обновлен.";
+                header('Location: ?route=restaurant/list');
+                exit;
+            } else {
+                $_SESSION['error_message'] = "Ошибка при обновлении ресторана.";
+            }
+        }
+        
+        // Передаем данные в форму для редактирования
+        require_once __DIR__ . '/../views/restaurant/edit.php';
+    }
+    
 } 
