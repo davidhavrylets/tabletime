@@ -23,6 +23,12 @@ if ($route === 'home') {
 } else if ($route === 'reservation/create') { 
     $reservationController = new ReservationController();
     $reservationController->create();
+} else if ($route === 'restaurant/list') {
+    $restaurantController = new RestaurantController();
+    $restaurantController->list();
+} else if ($route === 'restaurant/create') {
+    $restaurantController = new RestaurantController();
+    $restaurantController->create();
 } else {
     echo "404 - Страница не найдена.";
 }
