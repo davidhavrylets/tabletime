@@ -30,6 +30,9 @@ if ($route === 'home') {
 } else if ($route === 'restaurant/create') {
     $restaurantController = new RestaurantController();
     $restaurantController->create();
+} else if ($route === 'restaurant/delete') { 
+    $restaurantController = new RestaurantController();
+    $restaurantController->delete();
 } else {
     echo "404 - Страница не найдена.";
 }

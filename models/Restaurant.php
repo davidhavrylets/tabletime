@@ -43,6 +43,14 @@ class Restaurant {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
-   
+public function deleteRestaurant($id) {
+        
+        if ($id == 1) {
+            return false;
+        }
+        $sql = "DELETE FROM restaurant WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
 }

@@ -1,5 +1,18 @@
 <div class="container">
     <h2>Список Ресторанов</h2>
+
+    <?php 
+    
+    if (isset($_SESSION['success_message'])): ?>
+        <p style="color: green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
+        <?php unset($_SESSION['success_message']); 
+    endif; 
+
+    if (isset($_SESSION['error_message'])): ?>
+        <p style="color: red; font-weight: bold;"><?php echo $_SESSION['error_message']; ?></p>
+        <?php unset($_SESSION['error_message']); 
+    endif;
+    ?>
     <p><a href="?route=restaurant/create" class="btn btn-primary">Добавить новый ресторан</a></p>
 
     <?php 
@@ -35,6 +48,9 @@
                         <td><?php echo htmlspecialchars($restaurant['UTILISATEUR_id'] ?? 'N/A'); ?></td>
                         <td>
                             <a href="#">Посмотреть</a>
+                            <a href="?route=restaurant/delete&id=<?php echo htmlspecialchars($restaurant['id']); ?>" 
+                               onclick="return confirm('Вы уверены, что хотите удалить ресторан «<?php echo htmlspecialchars($restaurant['nom']); ?>»?');" 
+                               style="color: red; margin-left: 10px;">Удалить</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
