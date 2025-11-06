@@ -11,15 +11,19 @@ class Restaurant {
     }
 
   
-    public function createRestaurant($nom, $adresse, $description, $user_id_restaurateur) {
+    public function createRestaurant($nom, $adresse, $description, $utilisateurId) {
+        
+        
         $sql = "INSERT INTO restaurant (nom, adresse, description, UTILISATEUR_id) 
-                VALUES (:nom, :adresse, :description, :user_id)";
+                VALUES (:nom, :adresse, :description, :utilisateurId)";
         
         $stmt = $this->db->prepare($sql);
+        
         $stmt->bindParam(':nom', $nom);
         $stmt->bindParam(':adresse', $adresse);
         $stmt->bindParam(':description', $description);
-        $stmt->bindParam(':user_id', $user_id_restaurateur);
+        
+        $stmt->bindParam(':utilisateurId', $utilisateurId); 
 
         return $stmt->execute();
     }
