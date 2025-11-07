@@ -69,6 +69,15 @@ class Restaurant {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getRestaurantByUserId($userId) {
+        
+        $sql = "SELECT * FROM restaurant WHERE UTILISATEUR_id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':userId', $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function updateRestaurant($id, $nom, $adresse, $description) {
         $sql = "UPDATE restaurant 
                 SET nom = :nom, adresse = :adresse, description = :description 

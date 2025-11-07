@@ -3,7 +3,8 @@ session_start();
 
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ReservationController.php'; 
-require_once __DIR__ . '/controllers/RestaurantController.php'; // СТРОКА 9: ПОДКЛЮЧЕН
+require_once __DIR__ . '/controllers/RestaurantController.php';
+require_once __DIR__ . '/controllers/TableController.php';
 
 $route = isset($_GET['route']) ? $_GET['route'] : 'home';
 
@@ -37,6 +38,9 @@ if ($route === 'home') {
 } else if ($route === 'restaurant/edit') { 
     $restaurantController = new RestaurantController();
     $restaurantController->edit();
+} else if ($route === 'table/manage') {
+    $tableController = new TableController();
+    $tableController->index();
 } else { 
     echo "404 - Страница не найдена.";
 }
