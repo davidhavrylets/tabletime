@@ -35,7 +35,32 @@ class Restaurant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    
+    public function getRestaurants(string $search = '', string $sort = 'id', string $order = 'ASC') {
+        $sql = "SELECT * FROM restaurant WHERE 1=1";
+        $params = [];
+        
+        
+        if (!empty($search)) {
+            $sql .= " AND (nom LIKE :search OR adresse LIKE :search OR description LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+
+       
+        $allowedSort = ['id', 'nom', 'adresse']; 
+        $allowedOrder = ['ASC', 'DESC'];
+        
+        
+        $sort = in_array($sort, $allowedSort) ? $sort : 'id';
+        $order = in_array($order, $allowedOrder) ? $order : 'ASC';
+
+        
+        $sql .= " ORDER BY {$sort} {$order}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params); // Передаем параметры
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getRestaurantById($id) {
         $sql = "SELECT * FROM restaurant WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -58,7 +83,7 @@ class Restaurant {
 
         return $stmt->execute();
     }
-    
+
 public function deleteRestaurant($id) {
         
         if ($id == 1) {

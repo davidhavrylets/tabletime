@@ -4,6 +4,20 @@ require_once __DIR__ . '/../models/Restaurant.php';
 
 class RestaurantController {
     
+public function indexPublic() {
+        
+        $search = $_GET['search'] ?? '';
+        $sort = $_GET['sort'] ?? 'id';
+        $order = $_GET['order'] ?? 'ASC';
+
+        $restaurantModel = new Restaurant();
+        
+        $restaurants = $restaurantModel->getRestaurants($search, $sort, $order);
+        
+       
+        require_once __DIR__ . '/../views/restaurant_public/index.php';
+    }
+
     public function list() {
         // Проверка авторизации
         if (!isset($_SESSION['user_id'])) { 
@@ -77,7 +91,7 @@ class RestaurantController {
         header('Location: ?route=restaurant/list');
         exit;
     } 
-    
+
     public function edit() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');

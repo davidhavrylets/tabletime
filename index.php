@@ -1,17 +1,18 @@
 <?php
-
 session_start();
 
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ReservationController.php'; 
-require_once __DIR__ . '/controllers/RestaurantController.php';
+require_once __DIR__ . '/controllers/RestaurantController.php'; // СТРОКА 9: ПОДКЛЮЧЕН
 
 $route = isset($_GET['route']) ? $_GET['route'] : 'home';
 
 require_once __DIR__ . '/views/layout/header.php';
 
 if ($route === 'home') {
-    require_once __DIR__ . '/views/home/index.php';
+    
+    $restaurantController = new RestaurantController();
+    $restaurantController->indexPublic();
 } else if ($route === 'register') {
     $userController = new UserController();
     $userController->register();
@@ -36,9 +37,7 @@ if ($route === 'home') {
 } else if ($route === 'restaurant/edit') { 
     $restaurantController = new RestaurantController();
     $restaurantController->edit();
-} else if ($route === 'restaurant/delete') {
-    
-} else {
+} else { 
     echo "404 - Страница не найдена.";
 }
 
