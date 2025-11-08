@@ -11,8 +11,16 @@
 <nav>
     <a href="?route=home">Главная</a>
     <?php if (isset($_SESSION['user_id'])): ?>
+        
         Привет, <?php echo htmlspecialchars($_SESSION['user_nom']); ?>
-        <a href="?route=logout">Выход</a> <?php else: ?>
+        
+        <a href="?route=reservation/list">Мои бронирования</a> 
+        
+        <a href="?route=table/manage">Управление рестораном</a> 
+        
+        <a href="?route=logout">Выход</a> 
+        
+    <?php else: ?>
         <a href="?route=register">Регистрация</a> | <a href="?route=login">Вход</a>
     <?php endif; ?>
 </nav>
