@@ -53,7 +53,20 @@ class Reservation {
         return empty($availableTables) ? null : reset($availableTables); 
     }
 
-   
+   public function getReservationsByUserId($userId) {
+        $sql = "SELECT r.*, res.nom AS restaurant_nom
+                FROM reservation r
+                JOIN restaurant res ON r.restaurant_id = res.id
+                WHERE r.user_id = :userId
+                ORDER BY r.reservation_date DESC, r.reservation_time DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':userId', $userId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
         $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
                 VALUES (:userId, :restaurantId, :tableId, :date, :time, :guests, :remarques, 'en attente')";

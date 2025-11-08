@@ -5,6 +5,27 @@ require_once __DIR__ . '/../models/Restaurant.php';
 
 class ReservationController {
     
+
+
+
+public function list() {
+        
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error_message'] = "Вы должны войти, чтобы просмотреть свои бронирования.";
+            header('Location: ?route=login');
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $reservationModel = new Reservation();
+        
+        
+        $reservations = $reservationModel->getReservationsByUserId($userId);
+        
+        
+        require_once __DIR__ . '/../views/reservation/list.php';
+    }
+
     public function create() {
         
         if (!isset($_SESSION['user_id'])) {
