@@ -50,6 +50,9 @@ if ($route === 'home') {
 } else if ($route === 'reservation/confirm') {
     $controller = new ReservationController();
     $controller->confirm();
+} else if ($route === 'reservation/cancel') {
+    $controller = new ReservationController();
+    $controller->cancel();
 } else { 
     echo "404 - Страница не найдена.";
 }

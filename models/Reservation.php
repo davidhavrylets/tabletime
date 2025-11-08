@@ -95,7 +95,7 @@ public function cancelReservation($reservationId) {
         $stmt->bindParam(':id', $reservationId);
         return $stmt->execute();
     }
-
+    
     public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
         $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
                 VALUES (:userId, :restaurantId, :tableId, :date, :time, :guests, :remarques, 'en attente')";

@@ -56,6 +56,36 @@ public function list() {
         exit;
     }
 
+    public function cancel() {
+        
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
+            header('Location: ?route=login');
+            exit;
+        }
+
+        $reservationId = $_GET['id'] ?? null;
+
+        if (!$reservationId) {
+            $_SESSION['error_message'] = "ID бронирования не предоставлен.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+
+        $reservationModel = new Reservation();
+        $isCancelled = $reservationModel->cancelReservation($reservationId);
+
+        if ($isCancelled) {
+            $_SESSION['success_message'] = "Бронирование #{$reservationId} успешно отменено!";
+        } else {
+            $_SESSION['error_message'] = "Не удалось отменить бронирование #{$reservationId}. Возможно, оно уже отменено.";
+        }
+
+        
+        header('Location: ?route=reservation/manage');
+        exit;
+    }
+
 public function manage() {
         
         if (!isset($_SESSION['user_id'])) {
