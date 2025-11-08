@@ -81,6 +81,15 @@ public function getReservationsByRestaurantId($restaurantId) {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getReservationById($reservationId) {
+        $sql = "SELECT * FROM reservation WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 
 public function confirmReservation($reservationId) {
         $sql = "UPDATE reservation SET statut = 'confirmée' WHERE id = :id AND statut = 'en attente'";

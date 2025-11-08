@@ -2,16 +2,25 @@
     <h1>Управление бронированиями ресторана</h1>
 
     <?php 
-    // Отображение сообщений об успехе/ошибке
+    // === БЛОК ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ ===
+    
+    
     if (isset($_SESSION['success_message'])): ?>
         <p style="color: green; background-color: #e6ffe6; padding: 10px; border: 1px solid green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
         <?php unset($_SESSION['success_message']); 
     endif;
 
+    
+    if (isset($_SESSION['error_message'])): ?>
+        <p style="color: red; background-color: #ffe6e6; padding: 10px; border: 1px solid red; font-weight: bold;"><?php echo $_SESSION['error_message']; ?></p>
+        <?php unset($_SESSION['error_message']); 
+    endif;
+    
+    
     if (isset($error)): ?>
         <p style="color: red; font-weight: bold;"><?php echo $error; ?></p>
     <?php endif; ?>
-
+    
     <?php if (isset($restaurant) && isset($reservations)): ?>
         <h2>Бронирования для: <?php echo htmlspecialchars($restaurant['nom']); ?></h2>
         

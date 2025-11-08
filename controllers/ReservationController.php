@@ -27,7 +27,6 @@ public function list() {
     }
 
   public function confirm() {
-        
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
             header('Location: ?route=login');
@@ -35,14 +34,35 @@ public function list() {
         }
 
         $reservationId = $_GET['id'] ?? null;
-
         if (!$reservationId) {
             $_SESSION['error_message'] = "ID бронирования не предоставлен.";
             header('Location: ?route=reservation/manage');
             exit;
         }
 
+        $userId = $_SESSION['user_id'];
         $reservationModel = new Reservation();
+        $restaurantModel = new Restaurant();
+
+        
+        $reservationDetails = $reservationModel->getReservationById($reservationId); 
+        
+        if (!$reservationDetails) {
+            $_SESSION['error_message'] = "Бронирование не найдено.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+        
+        $restaurantId = $reservationDetails['restaurant_id'];
+
+        // 2. !!! ПРОВЕРКА ПРАВ: Владеет ли пользователь этим рестораном?
+        if (!$restaurantModel->isOwnerOfRestaurant($userId, $restaurantId)) {
+            $_SESSION['error_message'] = "У вас нет прав для управления этим бронированием.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+        
+        
         $isConfirmed = $reservationModel->confirmReservation($reservationId);
 
         if ($isConfirmed) {
@@ -51,13 +71,11 @@ public function list() {
             $_SESSION['error_message'] = "Не удалось подтвердить бронирование #{$reservationId}. Возможно, оно уже подтверждено или отменено.";
         }
 
-        
         header('Location: ?route=reservation/manage');
         exit;
     }
 
     public function cancel() {
-        
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
             header('Location: ?route=login');
@@ -71,8 +89,30 @@ public function list() {
             header('Location: ?route=reservation/manage');
             exit;
         }
-
+        
+        $userId = $_SESSION['user_id'];
         $reservationModel = new Reservation();
+        $restaurantModel = new Restaurant();
+        
+        
+        $reservationDetails = $reservationModel->getReservationById($reservationId); 
+        
+        if (!$reservationDetails) {
+            $_SESSION['error_message'] = "Бронирование не найдено.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+
+        $restaurantId = $reservationDetails['restaurant_id'];
+
+        
+        if (!$restaurantModel->isOwnerOfRestaurant($userId, $restaurantId)) {
+            $_SESSION['error_message'] = "У вас нет прав для управления этим бронированием.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+
+        
         $isCancelled = $reservationModel->cancelReservation($reservationId);
 
         if ($isCancelled) {
@@ -81,7 +121,6 @@ public function list() {
             $_SESSION['error_message'] = "Не удалось отменить бронирование #{$reservationId}. Возможно, оно уже отменено.";
         }
 
-        
         header('Location: ?route=reservation/manage');
         exit;
     }

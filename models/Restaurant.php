@@ -62,11 +62,14 @@ class Restaurant {
     }
 
     public function getRestaurantById($id) {
-        $sql = "SELECT * FROM restaurant WHERE id = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    $sql = "SELECT * FROM restaurant WHERE id = :id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+    $restaurant = $stmt->fetch(PDO::FETCH_ASSOC); 
+
+    return $restaurant;
     }
 
     public function getRestaurantByUserId($userId) {
@@ -102,5 +105,16 @@ public function deleteRestaurant($id) {
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
+    }
+
+    public function isOwnerOfRestaurant($userId, $restaurantId) {
+        $sql = "SELECT id FROM restaurant WHERE id = :restaurantId AND UTILISATEUR_id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->bindParam(':userId', $userId);
+        $stmt->execute();
+        
+        
+        return $stmt->rowCount() > 0;
     }
 }
