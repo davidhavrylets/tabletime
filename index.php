@@ -41,6 +41,15 @@ if ($route === 'home') {
 } else if ($route === 'table/manage') {
     $tableController = new TableController();
     $tableController->index();
+} else if ($route === 'reservation/list') {
+    $controller = new ReservationController();
+    $controller->list();
+} else if ($route === 'reservation/manage') {
+    $controller = new ReservationController();
+    $controller->manage();
+} else if ($route === 'reservation/confirm') {
+    $controller = new ReservationController();
+    $controller->confirm();
 } else { 
     echo "404 - Страница не найдена.";
 }

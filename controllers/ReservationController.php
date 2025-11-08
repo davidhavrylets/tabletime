@@ -26,6 +26,65 @@ public function list() {
         require_once __DIR__ . '/../views/reservation/list.php';
     }
 
+  public function confirm() {
+        
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
+            header('Location: ?route=login');
+            exit;
+        }
+
+        $reservationId = $_GET['id'] ?? null;
+
+        if (!$reservationId) {
+            $_SESSION['error_message'] = "ID бронирования не предоставлен.";
+            header('Location: ?route=reservation/manage');
+            exit;
+        }
+
+        $reservationModel = new Reservation();
+        $isConfirmed = $reservationModel->confirmReservation($reservationId);
+
+        if ($isConfirmed) {
+            $_SESSION['success_message'] = "Бронирование #{$reservationId} успешно подтверждено!";
+        } else {
+            $_SESSION['error_message'] = "Не удалось подтвердить бронирование #{$reservationId}. Возможно, оно уже подтверждено или отменено.";
+        }
+
+        
+        header('Location: ?route=reservation/manage');
+        exit;
+    }
+
+public function manage() {
+        
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
+            header('Location: ?route=login');
+            exit;
+        }
+
+        $userId = $_SESSION['user_id'];
+        $restaurantModel = new Restaurant();
+        
+        
+        $restaurant = $restaurantModel->getRestaurantByUserId($userId);
+
+        if (!$restaurant) {
+            $error = "Для управления бронированиями сначала необходимо создать свой ресторан.";
+            
+        } else {
+            
+            $restaurantId = $restaurant['id'];
+            $reservationModel = new Reservation();
+            $reservations = $reservationModel->getReservationsByRestaurantId($restaurantId);
+        }
+        
+       
+        require_once __DIR__ . '/../views/reservation/manage.php';
+    }
+
+
     public function create() {
         
         if (!isset($_SESSION['user_id'])) {

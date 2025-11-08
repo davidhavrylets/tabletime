@@ -66,6 +66,35 @@ class Reservation {
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+     
+public function getReservationsByRestaurantId($restaurantId) {
+        $sql = "SELECT r.*, u.nom AS user_nom, u.prenom AS user_prenom
+                FROM reservation r
+                JOIN utilisateur u ON r.user_id = u.id
+                WHERE r.restaurant_id = :restaurantId
+                ORDER BY r.reservation_date ASC, r.reservation_time ASC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+public function confirmReservation($reservationId) {
+        $sql = "UPDATE reservation SET statut = 'confirmée' WHERE id = :id AND statut = 'en attente'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId);
+        return $stmt->execute();
+    }
+
+public function cancelReservation($reservationId) {
+        $sql = "UPDATE reservation SET statut = 'annulée' WHERE id = :id AND statut != 'annulée'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId);
+        return $stmt->execute();
+    }
 
     public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
         $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
