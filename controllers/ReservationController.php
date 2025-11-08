@@ -1,41 +1,73 @@
 <?php
 
 require_once __DIR__ . '/../models/Reservation.php';
-require_once __DIR__ . '/../models/ReservationManager.php';
+require_once __DIR__ . '/../models/Restaurant.php';
 
 class ReservationController {
-
+    
     public function create() {
-        // Проверяем, авторизован ли пользователь)
+        
         if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error_message'] = "Вы должны войти, чтобы забронировать столик.";
             header('Location: ?route=login');
-            die();
+            exit;
+        }
+
+        $error = null;
+        $restaurant = null;
+
+     
+        $restaurantId = $_POST['restaurant_id'] ?? $_GET['restaurant_id'] ?? null;
+        
+        
+        if (!$restaurantId) {
+            $error = "Идентификатор ресторана не предоставлен.";
         }
         
-        $reservationManager = new ReservationManager();
-
-        // Обработка данных из формы
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $reservation = new Reservation();
-                $reservation->setUserId($_SESSION['user_id'])
-                            ->setRestaurantId($_POST['restaurant_id'] ?? 1) // Заглушка
-                            ->setDate($_POST['date'])
-                            ->setTime($_POST['time'])
-                            ->setGuests($_POST['guests']);
-    
-                if ($reservationManager->createReservation($reservation)) {
-                    echo "Ваш столик успешно забронирован!";
-                } else {
-                    echo "Произошла ошибка при бронировании.";
-                }
-            } catch (InvalidArgumentException $e) {
-                echo "Ошибка: " . $e->getMessage();
-            }
-
-        } else {
-            // Если GET-запрос, показываем форму бронирования
-            require_once __DIR__ . '/../views/reservation/create.php';
+        
+        if ($restaurantId) {
+            $restaurantModel = new Restaurant();
+            $restaurant = $restaurantModel->getRestaurantById($restaurantId);
         }
+
+        if (!$restaurant) {
+             
+            $error = "Ресторан не найден."; 
+        }
+        
+        
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $restaurant) { 
+            
+            $userId = $_SESSION['user_id'];
+            
+            $date = $_POST['reservation_date'] ?? null;
+            $time = $_POST['reservation_time'] ?? null;
+            $guests = $_POST['number_of_guests'] ?? null;
+            $remarques = $_POST['remarques'] ?? null;
+
+            $reservationModel = new Reservation();
+
+            
+            $tableId = $reservationModel->findAvailableTable($restaurantId, $date, $time, $guests);
+
+            if ($tableId) {
+                
+                $isCreated = $reservationModel->createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques);
+
+                if ($isCreated) {
+                    $_SESSION['success_message'] = "Ваш столик на {$guests} мест в ресторане {$restaurant['nom']} успешно забронирован на {$date} в {$time}!";
+                    header('Location: ?route=home');
+                    exit;
+                } else {
+                    $error = "Произошла ошибка при сохранении бронирования.";
+                }
+            } else {
+                $error = "К сожалению, мы не нашли свободного столика на указанное время и количество гостей. Попробуйте изменить параметры.";
+            }
+        }
+        
+        
+        require_once __DIR__ . '/../views/reservation/create.php';
     }
 }

@@ -1,72 +1,73 @@
 <?php
 
-
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class Reservation {
-    private ?int $id = null;
-    private int $user_id;
-    private int $restaurant_id;
-    private string $date;
-    private string $time;
-    private int $guests;
+    private $db;
 
-    // Геттеры
-    public function getId(): ?int {
-        return $this->id;
+    public function __construct() {
+        $database = new Database();
+        $this->db = $database->getPdo();
     }
 
-    public function getUserId(): int {
-        return $this->user_id;
-    }
+    /**
+     * Поиск подходящего столика для бронирования.
+     * Возвращает ID свободного столика, соответствующего вместимости.
+     */
+    public function findAvailableTable($restaurantId, $date, $time, $guests) {
+        
+        
+        $sql = "SELECT id FROM resto_table 
+                WHERE restaurant_id = :restaurantId AND capacite >= :guests";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->bindParam(':guests', $guests);
+        $stmt->execute();
+        $suitableTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    public function getRestaurantId(): int {
-        return $this->restaurant_id;
-    }
-
-    public function getDate(): string {
-        return $this->date;
-    }
-
-    public function getTime(): string {
-        return $this->time;
-    }
-
-    public function getGuests(): int {
-        return $this->guests;
-    }
-
-    // Сеттеры
-    public function setId(int $id): self {
-        $this->id = $id;
-        return $this;
-    }
-
-    public function setUserId(int $user_id): self {
-        $this->user_id = $user_id;
-        return $this;
-    }
-
-    public function setRestaurantId(int $restaurant_id): self {
-        $this->restaurant_id = $restaurant_id;
-        return $this;
-    }
-
-    public function setDate(string $date): self {
-        $this->date = $date;
-        return $this;
-    }
-
-    public function setTime(string $time): self {
-        $this->time = $time;
-        return $this;
-    }
-
-    public function setGuests(int $guests): self {
-        if ($guests <= 0) {
-            throw new InvalidArgumentException("Количество гостей должно быть больше нуля.");
+        if (empty($suitableTables)) {
+            return null; 
         }
-        $this->guests = $guests;
-        return $this;
+
+        $tableIds = implode(',', $suitableTables);
+
+       
+        $sql = "SELECT table_id FROM reservation 
+                WHERE restaurant_id = :restaurantId 
+                AND reservation_date = :date 
+                AND reservation_time = :time
+                AND table_id IN ({$tableIds})
+                AND statut IN ('confirmée', 'en attente')"; 
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->bindParam(':date', $date);
+        $stmt->bindParam(':time', $time);
+        $stmt->execute();
+        $bookedTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+       
+        $availableTables = array_diff($suitableTables, $bookedTables);
+
+        return empty($availableTables) ? null : reset($availableTables); 
+    }
+
+   
+    public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
+        $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
+                VALUES (:userId, :restaurantId, :tableId, :date, :time, :guests, :remarques, 'en attente')";
+        
+        $stmt = $this->db->prepare($sql);
+        
+        $stmt->bindParam(':userId', $userId);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->bindParam(':tableId', $tableId);
+        $stmt->bindParam(':date', $date);
+        $stmt->bindParam(':time', $time);
+        $stmt->bindParam(':guests', $guests);
+        $stmt->bindParam(':remarques', $remarques);
+        
+        return $stmt->execute();
     }
 }

@@ -1,11 +1,22 @@
 <div class="container">
     <h1>Найдите свой идеальный столик</h1>
     
+  <?php 
+    
+    if (isset($_SESSION['success_message'])): ?>
+        <p style="color: green; background-color: #e6ffe6; padding: 10px; border: 1px solid green; font-weight: bold;">
+            <?php echo $_SESSION['success_message']; ?>
+        </p>
+        <?php unset($_SESSION['success_message']); 
+    endif;
+    
+    ?>
+
     <form action="?route=home" method="GET" class="search-form">
         <input type="hidden" name="route" value="home">
         
         <input type="text" name="search" placeholder="Название, адрес или описание" 
-               value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" style="padding: 10px; width: 60%;">
+                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>" style="padding: 10px; width: 60%;">
         
         <select name="sort" style="padding: 10px;">
             <option value="id" <?php echo ($_GET['sort'] ?? '') === 'id' ? 'selected' : ''; ?>>По умолчанию</option>
