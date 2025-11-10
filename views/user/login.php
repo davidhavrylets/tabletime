@@ -6,7 +6,7 @@
     </div>
     <div>
         <label for="mot_de_passe">Mot de passe:</label>
-        <input type="password" name="mot_de_passe" required>
+        <input type="password" name="password" required>
     </div>
     <button type="submit">Se connecter</button>
 </form>

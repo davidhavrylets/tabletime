@@ -1,7 +1,8 @@
 <?php
+// models/ReservationManager.php
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/Reservation.php';
+require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/Reservation.php'; 
 
 class ReservationManager {
     private $db;
@@ -11,43 +12,120 @@ class ReservationManager {
         $this->db = $database->getPdo();
     }
 
-    public function createReservation(Reservation $reservation): bool {
+    public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
         
+        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
+                VALUES (:user_id, :restaurant_id, :table_id, :reservation_date, :reservation_time, :number_of_guests, :remarques, 'en attente')";
         
-        $stmt = $this->db->prepare("
-            INSERT INTO RESERVATION (user_id, restaurant_id, reservation_date, reservation_time, number_of_guests)
-            VALUES (:user_id, :restaurant_id, :date, :time, :guests)
-        ");
+        $stmt = $this->db->prepare($sql);
         
-        $params = [
-            ':user_id' => $reservation->getUserId(),
-            ':restaurant_id' => $reservation->getRestaurantId(),
-            ':date' => $reservation->getDate(),
-            ':time' => $reservation->getTime(),
-            ':guests' => $reservation->getGuests()
-        ];
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->bindParam(':restaurant_id', $restaurantId);
+        $stmt->bindParam(':table_id', $tableId);
+        $stmt->bindParam(':reservation_date', $date);
+        $stmt->bindParam(':reservation_time', $time);
+        $stmt->bindParam(':number_of_guests', $guests);
+        $stmt->bindParam(':remarques', $remarques);
 
-        return $stmt->execute($params);
+        return $stmt->execute();
+    }
+
+    public function getReservationsByUserId($userId) {
+        $sql = "SELECT r.*, rest.nom AS restaurant_nom 
+                FROM reservation r
+                JOIN restaurant rest ON r.restaurant_id = rest.id
+                WHERE r.user_id = :user_id
+                ORDER BY r.reservation_date DESC, r.reservation_time DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getReservationsByRestaurantId($restaurantId) {
+        $sql = "SELECT r.*, u.nom AS user_nom, u.prenom AS user_prenom, t.numero AS table_numero
+                FROM reservation r
+                JOIN utilisateur u ON r.user_id = u.id
+                JOIN resto_table t ON r.table_id = t.id
+                WHERE r.restaurant_id = :restaurant_id
+                ORDER BY r.reservation_date ASC, r.reservation_time ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurant_id', $restaurantId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getReservationById($reservationId) {
+        $sql = "SELECT * FROM reservation WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function confirmReservation($reservationId) {
+        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        $sql = "UPDATE reservation SET statut = 'confirmée' WHERE id = :id AND statut = 'en attente'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function cancelReservation($reservationId) {
+        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        $sql = "UPDATE reservation SET statut = 'annulée' WHERE id = :id AND statut != 'annulée'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
+        return $stmt->execute();
     }
     
-   public function getReservationsByUserId(int $user_id): array {
-        $stmt = $this->db->prepare("
-            SELECT * FROM RESERVATION WHERE user_id = :user_id
-        ");
-        $stmt->execute([':user_id' => $user_id]);
-        
-        $reservations = [];
-        while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $reservation = new Reservation();
-            $reservation->setId($data['id'])
-                        ->setUserId($data['user_id'])
-                        ->setRestaurantId($data['restaurant_id'])
-                        ->setDate($data['reservation_date'])
-                        ->setTime($data['reservation_time'])
-                        ->setGuests($data['number_of_guests']);
-            $reservations[] = $reservation;
-        }
+    // --- 
+    // --- МЕТОД, КОТОРЫЙ ВЫЗВАЛ ОШИБКУ ---
+    // --- 
+    public function findAvailableTable($restaurantId, $date, $time, $guests) {
+        $sql = "
+            SELECT t.id
+            FROM resto_table t
+            LEFT JOIN reservation r ON t.id = r.table_id
+                AND r.reservation_date = :reservation_date
+                AND r.reservation_time = :reservation_time
+                AND r.statut != 'annulée' -- Игнорируем отмененные
+            WHERE 
+                t.restaurant_id = :restaurant_id
+                AND t.capacite >= :guests
+                AND r.id IS NULL -- Ключевое условие: ищем, где НЕТ совпадения (столик свободен)
+            LIMIT 1
+        ";
 
-        return $reservations;
+        // ---
+        // --- ВОТ ИСПРАВЛЕНИЕ (строка 104) ---
+        // --- $this.db -> $this->db
+        // ---
+        $stmt = $this->db->prepare($sql); 
+        
+        $stmt->bindParam(':restaurant_id', $restaurantId, PDO::PARAM_INT);
+        $stmt->bindParam(':reservation_date', $date);
+        $stmt->bindParam(':reservation_time', $time);
+        $stmt->bindParam(':guests', $guests, PDO::PARAM_INT);
+        
+        $stmt->execute(); 
+        
+        $table = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($table) {
+            return $table['id']; // Возвращаем ID столика
+        } else {
+            return false; // Нет свободных столиков
+        }
+    }
+    
+    // --- Ваши методы для комиссии (из .txt) ---
+    public function getCommissionRate($restaurantId) {
+        return 0.10; // Пример
+    }
+
+    public function calculateCommission($reservationId) {
+        // ... (Логика комиссии)
     }
 }

@@ -5,11 +5,21 @@ require_once __DIR__ . '/../models/Restaurant.php';
 
 class TableController {
     
+    /**
+     * 1. РЕДАКТИРОВАНИЕ СТОЛИКА
+     */
     public function edit() {
+        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
         }
+        if ($_SESSION['user_role'] !== 'owner') {
+            $_SESSION['error_message'] = "У вас нет прав доступа к этой странице.";
+            header('Location: ?route=home'); // Клиентов отправляем на главную
+            exit;
+        }
+        // --- КОНЕЦ ПРОВЕРКИ ---
 
         $userId = $_SESSION['user_id'];
         $tableId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -24,36 +34,32 @@ class TableController {
         $restaurantModel = new Restaurant();
         
         $table = $tableModel->getTableById($tableId);
+        // Получаем ресторан, чтобы проверить, что столик принадлежит владельцу
         $restaurant = $restaurantModel->getRestaurantByUserId($userId);
         $error = null;
-        $success = null;
 
-        // найден ли столик и принадлежит ли он текущему владельцу
+        // Проверка: найден ли столик и принадлежит ли он текущему владельцу
         if (!$table || !$restaurant || $table['restaurant_id'] !== $restaurant['id']) {
             $_SESSION['error_message'] = "Столик не найден или у вас нет прав на его редактирование.";
             header('Location: ?route=table/manage');
             exit;
         }
         
-        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $capacity = filter_input(INPUT_POST, 'capacite', FILTER_VALIDATE_INT);
-            // ПЕРЕКЛЮЧАЕМСЯ С 'name' на 'numero'
-            $numero = trim($_POST['name'] ?? ''); 
+            $name = trim($_POST['name'] ?? ''); // (Или 'numero', если вы используете его)
             
             if (!$capacity || $capacity <= 0) {
                 $error = "Вместимость должна быть положительным числом.";
             }
-            
-            if (empty($numero)) { // Используем $numero
-                $error = "Название/Номер столика не может быть пустым.";
+            if (empty($name)) {
+                $error = "Название столика не может быть пустым.";
             }
 
             if (!$error) {
-                // ИСПОЛЬЗУЕМ updateTable с $numero
-                if ($tableModel->updateTable($tableId, $capacity, $numero)) { 
-                    $_SESSION['success_message'] = "Столик '{$numero}' успешно обновлен.";
+                if ($tableModel->updateTable($tableId, $capacity, $name)) { 
+                    $_SESSION['success_message'] = "Столик '{$name}' успешно обновлен.";
                     header('Location: ?route=table/manage');
                     exit;
                 } else {
@@ -61,28 +67,31 @@ class TableController {
                 }
             }
             
-            // Если ошибка, обновляем данные столика для повторного отображения формы
             $table['capacite'] = $capacity; 
-            $table['numero'] = $numero; // ИСПОЛЬЗУЕМ $numero
+            $table['name'] = $name;
         }
-        
-        // ВАЖНО: нужно загрузить поле 'numero' из БД для формы
-        $table['name'] = $table['numero'] ?? '';
 
-        
         $userRestaurant = $restaurant;
         
         require_once __DIR__ . '/../views/table/edit.php';
     }
 
-    // ----------------------------------------------------------------------
-    // УДАЛЕНИЕ (delete)
-    // ----------------------------------------------------------------------
+
+    /**
+     * 2. УДАЛЕНИЕ СТОЛИКА
+     */
     public function delete() {
+        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
         }
+        if ($_SESSION['user_role'] !== 'owner') {
+            $_SESSION['error_message'] = "У вас нет прав доступа к этой странице.";
+            header('Location: ?route=home');
+            exit;
+        }
+        // --- КОНЕЦ ПРОВЕРКИ ---
 
         $userId = $_SESSION['user_id'];
         $tableId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -99,18 +108,16 @@ class TableController {
         $table = $tableModel->getTableById($tableId);
         $restaurant = $restaurantModel->getRestaurantByUserId($userId);
 
-        
+        // Проверка: найден ли столик и принадлежит ли он текущему владельцу
         if (!$table || !$restaurant || $table['restaurant_id'] !== $restaurant['id']) {
             $_SESSION['error_message'] = "Столик не найден или у вас нет прав на его удаление.";
             header('Location: ?route=table/manage');
             exit;
         }
         
-        
         if ($tableModel->deleteTable($tableId)) {
-            
             $tableName = $table['name'] ?? 'ID: ' . $table['id']; 
-            $_SESSION['success_message'] = "Столик '{$tableName}' успешно удален. Связанные с ним бронирования также отменены.";
+            $_SESSION['success_message'] = "Столик '{$tableName}' успешно удален.";
         } else {
             $_SESSION['error_message'] = "Не удалось удалить столик.";
         }
@@ -120,56 +127,62 @@ class TableController {
     }
 
 
-    // ----------------------------------------------------------------------
-    // МЕТОД 3: УПРАВЛЕНИЕ (manage) - бывшая функция index()
-    // ----------------------------------------------------------------------
-    public function manage() {
-        
+    /**
+     * 3. УПРАВЛЕНИЕ (ГЛАВНАЯ СТРАНИЦА АДМИНКИ СТОЛИКОВ)
+     */
+   public function manage() {
+        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
         }
-        
+        if ($_SESSION['user_role'] !== 'owner') {
+            $_SESSION['error_message'] = "У вас нет прав доступа к этой странице.";
+            header('Location: ?route=home');
+            exit;
+        }
+        // --- КОНЕЦ ПРОВЕРКИ ---
         
         $restaurantModel = new Restaurant();
         $userRestaurant = $restaurantModel->getRestaurantByUserId($_SESSION['user_id']); 
         
         if (!$userRestaurant) {
-            $_SESSION['error_message'] = "У вас нет активного ресторана для управления столиками.";
-            header('Location: ?route=restaurant/list'); // Или создать ресторан: ?route=restaurant/create
+            $_SESSION['error_message'] = "У вас нет активного ресторана. Пожалуйста, сначала создайте его.";
+            header('Location: ?route=restaurant/create'); 
             exit;
         }
 
         $restaurantId = $userRestaurant['id'];
-        $tableModel = new Table();
-       
-        $tables = $tableModel->getTablesByRestaurantId($restaurantId); 
-
+        
+        // ИСПРАВЛЕНИЕ: Используем 'new Table()', а не 'TableManager()'
+        $tableModel = new Table(); 
         $error = null;
-        $success = null;
         
-        
+        // Обработка POST-запроса (Создание нового столика)
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $capacity = $_POST['capacite'] ?? null;
             
-            if ($capacity && is_numeric($capacity) && $capacity > 0) {
+            // ИСПРАВЛЕНИЕ: Мы читаем 'name' и 'capacite' из формы
+            $capacity = $_POST['capacite'] ?? null;
+            $name = trim($_POST['name'] ?? ''); 
+
+            if ($capacity && is_numeric($capacity) && $capacity > 0 && !empty($name)) {
                 
-                $isCreated = $tableModel->createTable((int)$capacity, $restaurantId); 
+                // ИСПРАВЛЕНИЕ: Передаем ВСЕ ТРИ аргумента в Модель
+                $isCreated = $tableModel->createTable((int)$capacity, $restaurantId, $name); 
                 
                 if ($isCreated) {
-                    $_SESSION['success_message'] = "Столик вместимостью {$capacity} успешно добавлен.";
-                    
+                    $_SESSION['success_message'] = "Столик '{$name}' (вместимость {$capacity}) успешно добавлен.";
                     header('Location: ?route=table/manage');
                     exit;
                 } else {
                     $error = "Ошибка при добавлении столика в базу данных.";
                 }
             } else {
-                $error = "Пожалуйста, введите корректную вместимость столика.";
+                $error = "Пожалуйста, введите корректное имя и вместимость столика.";
             }
         }
         
-        
+        // Загружаем список столиков (уже с новым)
         $tables = $tableModel->getTablesByRestaurantId($restaurantId);
         
         require_once __DIR__ . '/../views/table/manage.php';

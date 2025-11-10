@@ -36,13 +36,13 @@
             <p style="font-size: 0.9em; color: gray;">Оставьте поля пароля пустыми, если не хотите его менять.</p>
 
             <div style="margin-bottom: 15px;">
-                <label for="mot_de_passe">Новый Пароль:</label>
-                <input type="password" id="mot_de_passe" name="mot_de_passe">
+                <label for="password">Новый Пароль:</label>
+                <input type="password" id="password" name="password">
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label for="mot_de_passe_confirm">Повторите Пароль:</label>
-                <input type="password" id="mot_de_passe_confirm" name="mot_de_passe_confirm">
+                <label for="password_confirm">Повторите Пароль:</label>
+                <input type="password" id="password_confirm" name="password_confirm">
             </div>
 
             <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Сохранить Изменения</button>

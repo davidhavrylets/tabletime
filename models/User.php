@@ -7,6 +7,7 @@ class User {
     private string $email;
     private string $telephone;
     private string $mot_de_passe;
+    private string $role = 'client'; 
 
     // Геттеры
     public function getId(): ?int {
@@ -31,6 +32,11 @@ class User {
 
     public function getMotDePasse(): string {
         return $this->mot_de_passe;
+    }
+    
+    // --- НОВЫЙ ГЕТТЕР ДЛЯ РОЛИ ---
+    public function getRole(): string {
+        return $this->role;
     }
 
     // Сеттеры
@@ -65,6 +71,16 @@ class User {
     public function setMotDePasse(string $mot_de_passe): self {
         
         $this->mot_de_passe = $mot_de_passe;
+        return $this;
+    }
+    
+    // --- НОВЫЙ СЕТТЕР ДЛЯ РОЛИ ---
+    public function setRole(string $role): self {
+        if ($role === 'client' || $role === 'owner') {
+            $this->role = $role;
+        } else {
+            $this->role = 'client'; 
+        }
         return $this;
     }
 }

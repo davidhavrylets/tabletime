@@ -21,17 +21,19 @@ class UserManager {
         $hashed_password = password_hash($user->getMotDePasse(), PASSWORD_BCRYPT, ['cost' => 12]);
 
         $stmt = $this->db->prepare("
-            INSERT INTO UTILISATEUR (nom, prenom, email, telephone, mot_de_passe)
-            VALUES (:nom, :prenom, :email, :telephone, :hashed_password)
-        ");
-        
-        $params = [
-            ':nom' => $user->getNom(),
-            ':prenom' => $user->getPrenom(),
-            ':email' => $user->getEmail(),
-            ':telephone' => $user->getTelephone(),
-            ':hashed_password' => $hashed_password
-        ];
+        INSERT INTO UTILISATEUR (nom, prenom, email, telephone, mot_de_passe, role)
+        VALUES (:nom, :prenom, :email, :telephone, :hashed_password, :role)
+    ");
+    
+    $params = [
+        ':nom' => $user->getNom(),
+        ':prenom' => $user->getPrenom(),
+        ':email' => $user->getEmail(),
+        ':telephone' => $user->getTelephone(),
+        ':hashed_password' => $hashed_password,
+        ':role' => $user->getRole() 
+    ];
+    
         
         if ($stmt->execute($params)) {
             return (int) $this->db->lastInsertId();
@@ -41,20 +43,21 @@ class UserManager {
 
     public function login(string $email, string $mot_de_passe): ?User {
         $stmt = $this->db->prepare("SELECT * FROM UTILISATEUR WHERE email = :email");
-        $stmt->execute([':email' => $email]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt->execute([':email' => $email]);
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($userData && password_verify($mot_de_passe, $userData['mot_de_passe'])) {
-            $user = new User();
-            $user->setId($userData['id'])
-                 ->setNom($userData['nom'])
-                 ->setPrenom($userData['prenom'])
-                 ->setEmail($userData['email'])
-                 ->setTelephone($userData['telephone'])
-                 ->setMotDePasse($userData['mot_de_passe']); 
+    if ($userData && password_verify($mot_de_passe, $userData['mot_de_passe'])) {
+        $user = new User();
+        $user->setId($userData['id'])
+             ->setNom($userData['nom'])
+             ->setPrenom($userData['prenom'])
+             ->setEmail($userData['email'])
+             ->setTelephone($userData['telephone'])
+             ->setMotDePasse($userData['mot_de_passe']) 
+             ->setRole($userData['role']); 
 
-            return $user;
-        }
+        return $user;
+    }
         return null;
     }
     public function getUserById(int $id): ?User {

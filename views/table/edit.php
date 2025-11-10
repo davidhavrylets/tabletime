@@ -13,12 +13,6 @@
             <input type="hidden" name="table_id" value="<?php echo htmlspecialchars($table['id']); ?>">
 
             <div style="margin-bottom: 15px;">
-                <label for="name">Название Столика (например, "Окно", "Зал 1"):</label>
-                <input type="text" id="name" name="name" 
-                       value="<?php echo htmlspecialchars($table['name'] ?? ''); ?>" required> 
-            </div>
-            
-            <div style="margin-bottom: 15px;">
                 <label for="capacite">Вместимость (Количество человек):</label>
                 <input type="number" id="capacite" name="capacite" min="1" max="12" value="<?php echo htmlspecialchars($table['capacite']); ?>" required>
             </div>

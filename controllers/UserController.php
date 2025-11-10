@@ -7,49 +7,109 @@ class UserController {
     
     public function register() {
         $userManager = new UserManager();
+        $error = null; // Мы будем использовать эту переменную для передачи ошибок в HTML
+        
+        // Ваш секретный код
+        $SECRET_CODE = '200421'; 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = new User();
+            $role = 'client'; // По умолчанию регистрируем как клиента
+
+            // --- ИСПРАВЛЕНИЕ: Читаем 'password' из формы ---
+            $password = $_POST['password'] ?? ''; 
+            
             try {
-                $user->setNom($_POST['nom'])
-                     ->setPrenom($_POST['prenom'])
-                     ->setEmail($_POST['email'])
-                     ->setTelephone($_POST['telephone'] ?? '')
-                     ->setMotDePasse($_POST['mot_de_passe']);
+                // 1. Определяем, какая кнопка была нажата
+                if (isset($_POST['register_owner'])) {
+                    // --- Регистрация Владельца ---
+                    $role = 'owner';
+                    $submitted_code = $_POST['secret_code'] ?? '';
 
-                $userId = $userManager->register($user);
-
-                if ($userId) {
-                    header('Location: ?route=login');
-                    die();
-                } else {
-                    echo "Ошибка: Email уже существует или проблема с регистрацией.";
+                    // Проверяем секретный код
+                    if ($submitted_code !== $SECRET_CODE) {
+                        $error = "Неверный секретный код владельца.";
+                    }
+                    
+                } elseif (isset($_POST['register_client'])) {
+                    // --- Регистрация Клиента ---
+                    $role = 'client';
                 }
+
+                // 2. Если ошибок (например, неверный код) нет, продолжаем
+                if (!$error) {
+                    
+                    // --- ИСПРАВЛЕНИЕ: Валидация пароля ---
+                    if (empty($password)) {
+                        $error = "Пароль не может быть пустым.";
+                    }
+                    
+                    // (Вы можете добавить здесь и другие проверки: длина пароля и т.д.)
+                }
+                
+                if (!$error) {
+                    
+                    // Устанавливаем данные из формы в объект User
+                    $user->setNom($_POST['nom'])
+                         ->setPrenom($_POST['prenom'])
+                         ->setEmail($_POST['email'])
+                         ->setTelephone($_POST['telephone'] ?? '')
+                         ->setMotDePasse($password) // <-- ИСПОЛЬЗУЕМ $password
+                         ->setRole($role); // <- Устанавливаем определенную роль
+
+                    // 3. Пытаемся зарегистрировать
+                    $userId = $userManager->register($user);
+
+                    if ($userId) {
+                        $_SESSION['success_message'] = "Регистрация прошла успешно. Теперь войдите в систему.";
+                        header('Location: ?route=login');
+                        die();
+                    } else {
+                        // Эта ошибка сработает, если email уже занят (из вашего UserManager)
+                        $error = "Ошибка: Email уже существует или проблема с регистрацией.";
+                    }
+                }
+
             } catch (InvalidArgumentException $e) {
-                echo "Ошибка: " . $e->getMessage();
+                // Эта ошибка сработает, если email некорректный (из сеттера User)
+                $error = "Ошибка: " . $e->getMessage();
             }
-        } else {
-            require_once __DIR__ . '/../views/user/register.php';
-        }
+        } 
+        
+        // Загружаем вид (и передаем $error, если он есть)
+        require_once __DIR__ . '/../views/user/register.php';
     }
 
+    // --- ОБНОВЛЕННЫЙ МЕТОД LOGIN ---
     public function login() {
         $userManager = new UserManager();
+        $error = null; // Для передачи ошибки во view
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $loggedInUser = $userManager->login($_POST['email'], $_POST['mot_de_passe']);
+            
+            // ИСПРАВЛЕНО: Используем 'password' для единообразия с формой регистрации
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            
+            $loggedInUser = $userManager->login($email, $password);
 
             if ($loggedInUser) {
+                // Успешный вход
                 $_SESSION['user_id'] = $loggedInUser->getId();
                 $_SESSION['user_nom'] = $loggedInUser->getNom();
+                
+                // --- НОВАЯ СТРОКА: СОХРАНЯЕМ РОЛЬ В СЕССИИ ---
+                $_SESSION['user_role'] = $loggedInUser->getRole(); 
+
                 header('Location: ?route=home');
                 die();
             } else {
-                echo "Неверный email или пароль.";
+                $error = "Неверный email или пароль.";
             }
-        } else {
-            require_once __DIR__ . '/../views/user/login.php';
-        }
+        } 
+        
+        // Загружаем вид (и передаем $error, если он есть)
+        require_once __DIR__ . '/../views/user/login.php';
     }
 
     public function logout() {
@@ -59,6 +119,7 @@ class UserController {
     }
     
     
+    // --- ОБНОВЛЕННЫЙ МЕТОД PROFILE ---
     public function profile() {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти, чтобы просмотреть профиль.";
@@ -69,7 +130,6 @@ class UserController {
         $userId = $_SESSION['user_id'];
         $userManager = new UserManager();
         
-       
         $user = $userManager->getUserById($userId);
         $error = null;
         $success = null;
@@ -80,7 +140,6 @@ class UserController {
             exit;
         }
         
-        
         $user_data = [
             'prenom' => $user->getPrenom(),
             'nom' => $user->getNom(),
@@ -90,13 +149,15 @@ class UserController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
-            $nom = filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_STRING);
-            $prenom = filter_input(INPUT_POST, 'prenom', FILTER_SANITIZE_STRING);
+            // ИСПРАВЛЕНО: Убрали FILTER_SANITIZE_STRING
+            $nom = trim($_POST['nom'] ?? '');
+            $prenom = trim($_POST['prenom'] ?? '');
             $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-            $telephone = filter_input(INPUT_POST, 'telephone', FILTER_SANITIZE_STRING);
-            $password = filter_input(INPUT_POST, 'mot_de_passe');
-            $password_confirm = filter_input(INPUT_POST, 'mot_de_passe_confirm');
+            $telephone = trim($_POST['telephone'] ?? '');
             
+            // ИСПРАВЛЕНО: Используем 'password' для единообразия
+            $password = filter_input(INPUT_POST, 'password');
+            $password_confirm = filter_input(INPUT_POST, 'password_confirm');
             
             $user_data = [
                 'prenom' => $prenom,
@@ -105,19 +166,15 @@ class UserController {
                 'telephone' => $telephone,
             ];
 
-           
             if (!$email) {
                 $error = "Некорректный формат Email.";
             } 
-            
             
             if (!empty($password) && $password !== $password_confirm) {
                 $error = "Пароли не совпадают.";
             }
 
-            
             if (!$error) {
-                
                 
                 try {
                     $user->setNom($nom)
@@ -135,10 +192,8 @@ class UserController {
                     if ($userManager->update($user, $passwordToUpdate)) {
                         $success = "Профиль успешно обновлен.";
                         
-                        // Обновляем данные в сессии
                         $_SESSION['user_nom'] = $user->getNom();
                         
-                        // Перезагружаем объект, чтобы получить актуальные данные
                         $user = $userManager->getUserById($userId);
                         $user_data = [
                             'prenom' => $user->getPrenom(),

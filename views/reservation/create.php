@@ -2,7 +2,6 @@
     <h2>Бронирование столика в: <?php echo htmlspecialchars($restaurant['nom'] ?? 'Ресторан'); ?></h2>
     
     <?php 
-    
     // Блок для ошибок из сессии (после перенаправления)
     if (isset($_SESSION['error_message'])): ?>
         <p style="color: red; font-weight: bold;"><?php echo $_SESSION['error_message']; ?></p>
@@ -20,7 +19,7 @@
         <a href="?route=home">Вернуться к списку ресторанов</a>
     <?php else: ?>
     
-        <form action="?route=reservation/create" method="POST">
+        <form action="?route=reservation/create&id=<?php echo htmlspecialchars($restaurant['id']); ?>" method="POST">
             
             <input type="hidden" name="restaurant_id" value="<?php echo htmlspecialchars($restaurant['id']); ?>">
 
