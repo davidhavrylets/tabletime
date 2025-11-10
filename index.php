@@ -38,9 +38,19 @@ if ($route === 'home') {
 } else if ($route === 'restaurant/edit') { 
     $restaurantController = new RestaurantController();
     $restaurantController->edit();
+    
+// --- УПРАВЛЕНИЯ СТОЛИКАМИ (TABLE CRUD) ---
 } else if ($route === 'table/manage') {
     $tableController = new TableController();
-    $tableController->index();
+    $tableController->manage(); // 
+} else if ($route === 'table/edit') {
+    $tableController = new TableController();
+    $tableController->edit();
+} else if ($route === 'table/delete') {
+    $tableController = new TableController();
+    $tableController->delete();
+// ----------------------------------------------------------------------
+    
 } else if ($route === 'reservation/list') {
     $controller = new ReservationController();
     $controller->list();
@@ -53,7 +63,10 @@ if ($route === 'home') {
 } else if ($route === 'reservation/cancel') {
     $controller = new ReservationController();
     $controller->cancel();
-} else { 
+} else if ($route === 'user/profile') {
+    $controller = new UserController();
+    $controller->profile();
+} else {
     echo "404 - Страница не найдена.";
 }
 

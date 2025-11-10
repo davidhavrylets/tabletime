@@ -10,12 +10,37 @@ class Table {
         $this->db = $database->getPdo();
     }
 
-    /**
-     * Метод для создания нового столика в ресторане
-     * @param int $capacity Вместимость столика
-     * @param int $restaurantId ID ресторана, которому принадлежит столик
-     * @return bool Успех/неуспех операции
-     */
+    public function getTableById($tableId) {
+        $sql = "SELECT * FROM resto_table WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $tableId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    
+    public function updateTable($tableId, $capacite, $numero) { 
+        $sql = "UPDATE resto_table SET capacite = :capacite, numero = :numero WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $tableId, PDO::PARAM_INT);
+        $stmt->bindParam(':capacite', $capacite, PDO::PARAM_INT);
+        $stmt->bindParam(':numero', $numero, PDO::PARAM_STR); 
+        
+        try {
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            
+            return false;
+        }
+    }
+
+   
+    public function deleteTable($tableId) {
+        $sql = "DELETE FROM resto_table WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $tableId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
     public function createTable($capacity, $restaurantId) {
         $sql = "INSERT INTO resto_table (capacite, restaurant_id) 
                 VALUES (:capacity, :restaurantId)";

@@ -121,4 +121,11 @@ public function cancelReservation($reservationId) {
         
         return $stmt->execute();
     }
+    public function countPendingReservations($restaurantId) {
+        $sql = "SELECT COUNT(*) FROM reservation WHERE restaurant_id = :restaurantId AND statut = 'en attente'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurantId', $restaurantId);
+        $stmt->execute();
+        return $stmt->fetchColumn(); 
+    }
 }

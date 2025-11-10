@@ -39,17 +39,23 @@
                     <th>Действия</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($tables as $table): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($table['id']); ?></td>
-                        <td><?php echo htmlspecialchars($table['capacite']); ?> мест</td>
-                        <td>
-                            <a href="#">Редактировать</a> | <a href="#" style="color: red;">Удалить</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+           <tbody>
+                <?php foreach ($tables as $table): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($table['id']); ?></td>
+                        <td><?php echo htmlspecialchars($table['capacite']); ?> мест</td>
+                        <td>
+                             <a href="?route=table/edit&id=<?php echo $table['id']; ?>" style="color: blue;">Редактировать</a> | 
+                            
+                            <a href="?route=table/delete&id=<?php echo $table['id']; ?>" 
+                               onclick="return confirm('Вы уверены, что хотите удалить столик ID: <?php echo $table['id']; ?>? Это отменит все связанные бронирования!');" 
+                               style="color: red;">
+                                Удалить
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
 </div>

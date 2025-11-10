@@ -1,0 +1,134 @@
+:root {
+    --color-primary: #007bff; /* Яркий синий/голубой для кнопок, навигации */
+    --color-secondary: #6c757d; /* Серый/дополнительный */
+    --color-background: #f8f9fa; /* Светлый фон (почти белый) */
+    --color-text: #343a40; /* Темный текст */
+    --color-white: #ffffff;
+}
+
+/* Общие стили и сброс */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--color-white);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+h1, h2, h3 {
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Навигация (Header) */
+nav {
+    background-color: var(--color-primary);
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+nav a, nav span {
+    color: var(--color-white);
+    text-decoration: none;
+    padding: 0 15px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Формы */
+form div {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], 
+input[type="email"], 
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button[type="submit"], .btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none; /* для .btn-primary */
+    display: inline-block;
+}
+
+button[type="submit"]:hover, .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Таблицы (для Back-office) */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: left;
+}
+
+.table th {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 40px;
+    border-top: 1px solid #dee2e6;
+    color: var(--color-secondary);
+}
+
+/* Стили для формы поиска (на главной) */
+.search-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-form input[type="text"] {
+    flex-grow: 1;
+}
+
+.search-form select {
+    width: auto;
+}

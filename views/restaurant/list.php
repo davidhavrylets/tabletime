@@ -48,6 +48,8 @@
                         <td><?php echo htmlspecialchars($restaurant['UTILISATEUR_id'] ?? 'N/A'); ?></td>
                         <td>
                             <a href="#">Посмотреть</a>
+                            <a href="?route=restaurant/edit&id=<?php echo htmlspecialchars($restaurant['id']); ?>" 
+                               style="margin-right: 10px;">Редактировать</a>
                             <a href="?route=restaurant/delete&id=<?php echo htmlspecialchars($restaurant['id']); ?>" 
                                onclick="return confirm('Вы уверены, что хотите удалить ресторан «<?php echo htmlspecialchars($restaurant['nom']); ?>»?');" 
                                style="color: red; margin-left: 10px;">Удалить</a>

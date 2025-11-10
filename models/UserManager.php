@@ -51,10 +51,62 @@ class UserManager {
                  ->setPrenom($userData['prenom'])
                  ->setEmail($userData['email'])
                  ->setTelephone($userData['telephone'])
-                 ->setMotDePasse($userData['mot_de_passe']); // пароль здесь не нужен, но для примера
+                 ->setMotDePasse($userData['mot_de_passe']); 
 
             return $user;
         }
         return null;
+    }
+    public function getUserById(int $id): ?User {
+        $sql = "SELECT id, nom, prenom, email, telephone FROM UTILISATEUR WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($userData) {
+            $user = new User();
+            $user->setId($userData['id'])
+                 ->setNom($userData['nom'])
+                 ->setPrenom($userData['prenom'])
+                 ->setEmail($userData['email'])
+                 ->setTelephone($userData['telephone']);
+            return $user;
+        }
+        return null;
+    }
+    
+    /**
+     * Обновляет данные пользователя в БД.
+     */
+    public function update(User $user, $password = null): bool {
+        
+        $sql = "UPDATE UTILISATEUR SET nom = :nom, prenom = :prenom, email = :email, telephone = :telephone"; 
+        
+        if ($password) {
+            $sql .= ", mot_de_passe = :password";
+        }
+        
+        $sql .= " WHERE id = :id"; 
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $user->getId(), PDO::PARAM_INT);
+        $stmt->bindParam(':nom', $user->getNom());
+        $stmt->bindParam(':prenom', $user->getPrenom());
+        $stmt->bindParam(':email', $user->getEmail());
+        $stmt->bindParam(':telephone', $user->getTelephone());
+        
+        if ($password) {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt->bindParam(':password', $hashedPassword);
+        }
+        
+        try {
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            
+            return false; 
+        }
     }
 }

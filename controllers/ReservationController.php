@@ -5,10 +5,7 @@ require_once __DIR__ . '/../models/Restaurant.php';
 
 class ReservationController {
     
-
-
-
-public function list() {
+    public function list() {
         
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти, чтобы просмотреть свои бронирования.";
@@ -26,7 +23,7 @@ public function list() {
         require_once __DIR__ . '/../views/reservation/list.php';
     }
 
-  public function confirm() {
+    public function confirm() {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
             header('Location: ?route=login');
@@ -125,7 +122,7 @@ public function list() {
         exit;
     }
 
-public function manage() {
+    public function manage() {
         
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['error_message'] = "Вы должны войти для управления бронированиями.";
@@ -149,74 +146,105 @@ public function manage() {
             $reservations = $reservationModel->getReservationsByRestaurantId($restaurantId);
         }
         
-       
+        
         require_once __DIR__ . '/../views/reservation/manage.php';
     }
 
 
     public function create() {
-        
         if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error_message'] = "Вы должны войти, чтобы забронировать столик.";
             header('Location: ?route=login');
             exit;
         }
 
+        $userId = $_SESSION['user_id'];
         $error = null;
         $restaurant = null;
+        $restaurantModel = new Restaurant();
 
-     
-        $restaurantId = $_POST['restaurant_id'] ?? $_GET['restaurant_id'] ?? null;
         
-        
-        if (!$restaurantId) {
-            $error = "Идентификатор ресторана не предоставлен.";
-        }
-        
-        
-        if ($restaurantId) {
-            $restaurantModel = new Restaurant();
-            $restaurant = $restaurantModel->getRestaurantById($restaurantId);
-        }
-
-        if (!$restaurant) {
-             
-            $error = "Ресторан не найден."; 
-        }
-        
-        
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $restaurant) { 
-            
-            $userId = $_SESSION['user_id'];
-            
-            $date = $_POST['reservation_date'] ?? null;
-            $time = $_POST['reservation_time'] ?? null;
-            $guests = $_POST['number_of_guests'] ?? null;
-            $remarques = $_POST['remarques'] ?? null;
-
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reservationModel = new Reservation();
+            $restaurantId = filter_input(INPUT_POST, 'restaurant_id', FILTER_VALIDATE_INT);
+            $guests = filter_input(INPUT_POST, 'number_of_guests', FILTER_VALIDATE_INT);
+            $date = filter_input(INPUT_POST, 'reservation_date');
+            $time = filter_input(INPUT_POST, 'reservation_time');
+            $remarques = filter_input(INPUT_POST, 'remarques', FILTER_SANITIZE_STRING);
+
+            // --- БЛОК ВАЛИДАЦИИ ДАННЫХ НА СЕРВЕРЕ ---
+            
+           
+            if (!$restaurantId || !$guests || !$date || !$time) {
+                $error = "Все обязательные поля должны быть заполнены.";
+            } 
+            
+            
+            $today = new DateTime('today');
+            $reservationDate = new DateTime($date);
+            if ($reservationDate < $today) {
+                $error = "Дата бронирования не может быть в прошлом.";
+            }
 
             
-            $tableId = $reservationModel->findAvailableTable($restaurantId, $date, $time, $guests);
-
-            if ($tableId) {
+            if (!$error) {
+                list($hours, $minutes) = explode(':', $time);
+                $totalMinutes = (int)$hours * 60 + (int)$minutes;
                 
-                $isCreated = $reservationModel->createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques);
-
-                if ($isCreated) {
-                    $_SESSION['success_message'] = "Ваш столик на {$guests} мест в ресторане {$restaurant['nom']} успешно забронирован на {$date} в {$time}!";
-                    header('Location: ?route=home');
-                    exit;
-                } else {
-                    $error = "Произошла ошибка при сохранении бронирования.";
+                
+                if ($totalMinutes % 30 !== 0) {
+                    $error = "Время бронирования должно быть кратно 30 минутам (например, 12:00 или 12:30).";
                 }
-            } else {
-                $error = "К сожалению, мы не нашли свободного столика на указанное время и количество гостей. Попробуйте изменить параметры.";
+            }
+            
+            // --- КОНЕЦ БЛОКА ВАЛИДАЦИИ ---
+
+            if (!$error) {
+                
+                $reservationModel = new Reservation();
+                $tableId = $reservationModel->findAvailableTable($restaurantId, $date, $time, $guests);
+
+                if ($tableId) {
+                    
+                    if ($reservationModel->createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques)) {
+                        $_SESSION['success_message'] = "Ваше бронирование успешно создано! Ожидайте подтверждения от ресторана.";
+                        header('Location: ?route=reservation/list'); 
+                        exit;
+                    } else {
+                        $error = "Ошибка при записи бронирования в базу данных.";
+                    }
+                } else {
+                    $error = "К сожалению, на выбранное время и количество гостей нет свободных столиков.";
+                }
+            }
+            
+            
+            if ($error) {
+                $_SESSION['error_message'] = $error;
+                
+                $_SESSION['form_data'] = $_POST; 
+                
+                header('Location: ' . $_SERVER['HTTP_REFERER']); 
+                exit;
+            }
+        } 
+        
+        // 2. Отображение формы (GET-запрос)
+        // Если ID ресторана передан в URL
+        if (isset($_GET['id'])) {
+            $restaurantId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+            $restaurant = $restaurantModel->getRestaurantById($restaurantId);
+        } else {
+            
+            $restaurant = $restaurantModel->getRestaurantByUserId($userId);
+            
+            if (!$restaurant) {
+              
+                $error = "Для бронирования выберите ресторан из списка.";
             }
         }
+
+
         
-        
-        require_once __DIR__ . '/../views/reservation/create.php';
+        include 'views/reservation/create.php';
     }
 }
