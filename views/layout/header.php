@@ -21,16 +21,16 @@
             <a href="?route=home">Главная</a>
             
             <?php if ($userRole === 'owner'): ?>
-                <a href="?route=table/manage">Упр. Столиками</a>
+                
+                <a href="?route=restaurant/list">Мои Рестораны</a>
+                
                 <a href="?route=reservation/manage">Упр. Бронями</a>
-                <a href="?route=restaurant/edit">Мой Ресторан</a>
                 
             <?php elseif ($userRole === 'client'): ?>
                 <a href="?route=reservation/list">Мои Бронирования</a>
-                <a href="?route=restaurant/create">Стать Владельцем</a>
+                
             
             <?php endif; ?>
-
 
             <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="?route=user/profile">Профиль (<?php echo htmlspecialchars($_SESSION['user_nom']); ?>)</a>

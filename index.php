@@ -1,10 +1,23 @@
 <?php
 session_start();
 
+
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
+// --- ИСПРАВЛЕННЫЕ ПУТИ: ДОБАВЛЕНА ПАПКА /src/ ---
+require __DIR__ . '/libraries/PHPMailer/src/Exception.php';
+require __DIR__ . '/libraries/PHPMailer/src/PHPMailer.php';
+require __DIR__ . '/libraries/PHPMailer/src/SMTP.php';
+
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ReservationController.php'; 
 require_once __DIR__ . '/controllers/RestaurantController.php';
 require_once __DIR__ . '/controllers/TableController.php';
+
+
 
 $route = isset($_GET['route']) ? $_GET['route'] : 'home';
 
@@ -42,7 +55,7 @@ if ($route === 'home') {
 // --- УПРАВЛЕНИЯ СТОЛИКАМИ (TABLE CRUD) ---
 } else if ($route === 'table/manage') {
     $tableController = new TableController();
-    $tableController->manage(); // 
+    $tableController->manage();
 } else if ($route === 'table/edit') {
     $tableController = new TableController();
     $tableController->edit();
@@ -66,6 +79,13 @@ if ($route === 'home') {
 } else if ($route === 'user/profile') {
     $controller = new UserController();
     $controller->profile();
+
+
+} else if ($route === 'user/verify') {
+    $controller = new UserController();
+    $controller->verify();
+
+
 } else {
     echo "404 - Страница не найдена.";
 }

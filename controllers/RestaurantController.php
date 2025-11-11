@@ -6,7 +6,6 @@ class RestaurantController {
     
     /**
      * 1. ПУБЛИЧНЫЙ МЕТОД (для ?route=home)
-     * (Здесь все в порядке, он не требует входа)
      */
     public function indexPublic() {
         $search = $_GET['search'] ?? '';
@@ -15,16 +14,13 @@ class RestaurantController {
 
         $restaurantModel = new Restaurant();
         
-        // ВАЖНО: Убедитесь, что `getRestaurants` в модели не возвращает user_id
         $restaurants = $restaurantModel->getRestaurants($search, $sort, $order); 
         
-        // Используем БЕЗОПАСНЫЙ файл
         require_once __DIR__ . '/../views/restaurant/index_public.php'; 
     }
 
     /**
      * 2. АДМИН-ПАНЕЛЬ (для ?route=restaurant/list)
-     * (Показывает владельцу ЕГО рестораны)
      */
     public function list() {
         
@@ -35,17 +31,15 @@ class RestaurantController {
         }
         if ($_SESSION['user_role'] !== 'owner') {
             $_SESSION['error_message'] = "У вас нет прав доступа к этой странице.";
-            header('Location: ?route=home'); // Клиентов отправляем на главную
+            header('Location: ?route=home'); 
             exit;
         }
         // --- КОНЕЦ ПРОВЕРКИ ---
 
         $restaurantModel = new Restaurant();
         
-        // ИСПРАВЛЕНИЕ: Владелец должен видеть ТОЛЬКО СВОИ рестораны
         $restaurants = $restaurantModel->getRestaurantsByUserId($_SESSION['user_id']);
         
-        // Загружаем админ-панель
         require_once __DIR__ . '/../views/restaurant/list.php';
     }
 
@@ -59,7 +53,6 @@ class RestaurantController {
             header('Location: ?route=login');
             exit;
         }
-        // (Мы не проверяем роль 'owner', т.к. 'client' тоже может "Стать Владельцем")
         // --- КОНЕЦ ПРОВЕРКИ ---
 
         $error = null;
@@ -68,13 +61,8 @@ class RestaurantController {
         $restaurantModel = new Restaurant();
         $userId = $_SESSION['user_id'];
 
-        // --- ДОП. ПРОВЕРКА: Не даем создать ВТОРОЙ ресторан ---
-        if ($restaurantModel->getRestaurantByUserId($userId)) {
-            $_SESSION['error_message'] = "Вы уже являетесь владельцем ресторана. Вы не можете создать второй.";
-            header('Location: ?route=table/manage'); // Отправляем его в админку
-            exit;
-        }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        // 💥 УДАЛЕНА ПРОВЕРКА, КОТОРАЯ ЗАПРЕЩАЛА ВТОРОЙ РЕСТОРАН. 
+        // Теперь владелец может иметь несколько ресторанов.
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nom = $_POST['nom'] ?? '';
@@ -84,11 +72,13 @@ class RestaurantController {
             $isCreated = $restaurantModel->createRestaurant($nom, $adresse, $description, $userId);
             
             if ($isCreated) {
-                // ВАЖНО: После создания ресторана, обновляем роль в сессии!
+                // Если пользователь был клиентом, обновляем роль!
                 $_SESSION['user_role'] = 'owner'; 
                 
                 $_SESSION['success_message'] = "Ресторан '{$nom}' успешно создан! Теперь вы можете добавить столики.";
-                header('Location: ?route=table/manage'); // Сразу отправляем на создание столиков
+                
+                // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+                header('Location: ?route=restaurant/list'); 
                 exit;
             } else {
                 $error = "Ошибка при создании ресторана.";
@@ -159,14 +149,15 @@ class RestaurantController {
         }
         // --- КОНЕЦ ПРОВЕРКИ ---
 
-        $id = $_GET['id'] ?? null; // ID ресторана для редактирования
+        $id = $_GET['id'] ?? null; 
         $userId = $_SESSION['user_id'];
         $restaurantModel = new Restaurant();
         
         // --- ПРОВЕРКА ВЛАДЕНИЯ ---
         if (!$id || !$restaurantModel->isOwnerOfRestaurant($userId, $id)) {
              $_SESSION['error_message'] = "Вы не можете редактировать этот ресторан.";
-             header('Location: ?route=table/manage'); // На главную админки
+             // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+             header('Location: ?route=restaurant/list'); 
              exit;
         }
         // --- КОНЕЦ ПРОВЕРКИ ---
@@ -182,7 +173,8 @@ class RestaurantController {
 
             if ($isUpdated) {
                 $_SESSION['success_message'] = "Ресторан '{$nom}' успешно обновлен.";
-                header('Location: ?route=table/manage'); // На главную админки
+                // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+                header('Location: ?route=restaurant/list'); 
                 exit;
             } else {
                 $_SESSION['error_message'] = "Ошибка при обновлении ресторана.";

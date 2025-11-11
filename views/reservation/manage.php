@@ -2,23 +2,23 @@
     <h1>Управление бронированиями ресторана</h1>
 
     <?php 
-    // === БЛОК ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ ===
+    // === БЛОК ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ (Используем .alert) ===
     
-    
+    // Сообщение об успехе
     if (isset($_SESSION['success_message'])): ?>
-        <p style="color: green; background-color: #e6ffe6; padding: 10px; border: 1px solid green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
+        <div class="alert alert-success"><?php echo $_SESSION['success_message']; ?></div>
         <?php unset($_SESSION['success_message']); 
     endif;
 
-    
+    // Сообщение об ошибке (после редиректа)
     if (isset($_SESSION['error_message'])): ?>
-        <p style="color: red; background-color: #ffe6e6; padding: 10px; border: 1px solid red; font-weight: bold;"><?php echo $_SESSION['error_message']; ?></p>
+        <div class="alert alert-error"><?php echo $_SESSION['error_message']; ?></div>
         <?php unset($_SESSION['error_message']); 
     endif;
     
-    
+    // Локальная ошибка
     if (isset($error)): ?>
-        <p style="color: red; font-weight: bold;"><?php echo $error; ?></p>
+        <div class="alert alert-error"><?php echo $error; ?></div>
     <?php endif; ?>
     
     <?php if (isset($restaurant) && isset($reservations)): ?>
@@ -27,55 +27,79 @@
         <?php if (empty($reservations)): ?>
             <p>На данный момент бронирования отсутствуют.</p>
         <?php else: ?>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="border: 1px solid #ddd; padding: 8px;">Клиент</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Дата</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Время</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Гости</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Пожелания</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Статус</th>
-                        <th style="border: 1px solid #ddd; padding: 8px;">Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($reservations as $reservation): ?>
-                    <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <?php echo htmlspecialchars($reservation['user_nom'] . ' ' . $reservation['user_prenom']); ?>
-                        </td>
-                        <td style="border: 1px solid #ddd; padding: 8px;"><?php echo htmlspecialchars($reservation['reservation_date']); ?></td>
-                        <td style="border: 1px solid #ddd; padding: 8px;"><?php echo htmlspecialchars(substr($reservation['reservation_time'], 0, 5)); ?></td>
-                        <td style="border: 1px solid #ddd; padding: 8px;"><?php echo htmlspecialchars($reservation['number_of_guests']); ?></td>
-                        <td style="border: 1px solid #ddd; padding: 8px;"><?php echo htmlspecialchars($reservation['remarques'] ?? '-'); ?></td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <?php 
-                                $status = $reservation['statut'];
-                                if ($status === 'en attente') echo '<span style="color: orange;">В ожидании</span>';
-                                else if ($status === 'confirmée') echo '<span style="color: green;">Подтверждено</span>';
-                                else if ($status === 'annulée') echo '<span style="color: red;">Отменено</span>';
-                                else echo htmlspecialchars($status);
-                            ?>
-                        </td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">
-                            <?php if ($reservation['statut'] === 'en attente'): ?>
-                                <a href="?route=reservation/confirm&id=<?php echo $reservation['id']; ?>" style="color: green; margin-right: 10px;">Подтвердить</a>
-                                <a href="?route=reservation/cancel&id=<?php echo $reservation['id']; ?>" style="color: red;">Отменить</a>
-                            <?php else: ?>
-                                —
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Клиент</th>
+                            <th>Дата</th>
+                            <th>Время</th>
+                            <th class="text-center">Гости</th>
+                            <th>Пожелания</th>
+                            <th class="text-center">Статус</th>
+                            <th class="text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($reservations as $reservation): 
+                            // Определяем класс для подсветки статуса
+                            $status = $reservation['statut'];
+                            $statusText = '';
+                            $statusClass = '';
+                            
+                            if ($status === 'en attente') {
+                                $statusText = 'В ожидании';
+                                $statusClass = 'text-warning';
+                            } else if ($status === 'confirmée') {
+                                $statusText = 'Подтверждено';
+                                $statusClass = 'text-success';
+                            } else if ($status === 'annulée') {
+                                $statusText = 'Отменено';
+                                $statusClass = 'text-danger';
+                            } else {
+                                $statusText = htmlspecialchars($status);
+                            }
+                        ?>
+                        <tr>
+                            <td>
+                                <?php echo htmlspecialchars($reservation['user_nom'] . ' ' . $reservation['user_prenom']); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($reservation['reservation_date']); ?></td>
+                            <td><?php echo htmlspecialchars(substr($reservation['reservation_time'], 0, 5)); ?></td>
+                            <td class="text-center"><?php echo htmlspecialchars($reservation['number_of_guests']); ?></td>
+                            <td><?php echo htmlspecialchars($reservation['remarques'] ?? '-'); ?></td>
+                            
+                            <td class="text-center">
+                                <span class="<?php echo $statusClass; ?>">
+                                    **<?php echo $statusText; ?>**
+                                </span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <?php if ($status === 'en attente'): ?>
+                                    <a href="?route=reservation/confirm&id=<?php echo $reservation['id']; ?>" class="btn-link text-success">
+                                        Подтвердить
+                                    </a>
+                                    <a href="?route=reservation/cancel&id=<?php echo $reservation['id']; ?>" 
+                                       class="btn-link text-danger" 
+                                       onclick="return confirm('Вы уверены, что хотите отменить бронирование?');">
+                                        Отменить
+                                    </a>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
 
     <?php elseif (isset($error)): ?>
-        <p style="color: red; font-weight: bold;"><?php echo $error; ?></p>
+        <div class="alert alert-error"><?php echo $error; ?></div>
         <?php if (!isset($restaurant)): ?>
-            <p><a href="?route=restaurant/create">Создать ресторан</a></p>
+            <p><a href="?route=restaurant/create" class="btn-link">Создать ресторан</a></p>
         <?php endif; ?>
     <?php endif; ?>
 </div>

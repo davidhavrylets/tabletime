@@ -11,29 +11,35 @@ class UserManager {
         $this->db = $database->getPdo();
     }
 
-    public function register(User $user): ?int {
+    /**
+     * Регистрирует нового пользователя с токеном верификации.
+     * @param User $user Объект пользователя с данными.
+     * @param string $verificationToken Токен, сгенерированный контроллером.
+     * @return int|null ID нового пользователя или null в случае неудачи.
+     */
+    public function register(User $user, string $verificationToken): ?int { // <- ИЗМЕНЕНИЕ СИГНАТУРЫ
         $stmt = $this->db->prepare("SELECT id FROM UTILISATEUR WHERE email = :email");
         $stmt->execute([':email' => $user->getEmail()]);
         if ($stmt->fetch()) {
-            return null;
+            return null; // Пользователь уже существует
         }
 
         $hashed_password = password_hash($user->getMotDePasse(), PASSWORD_BCRYPT, ['cost' => 12]);
 
         $stmt = $this->db->prepare("
-        INSERT INTO UTILISATEUR (nom, prenom, email, telephone, mot_de_passe, role)
-        VALUES (:nom, :prenom, :email, :telephone, :hashed_password, :role)
-    ");
-    
-    $params = [
-        ':nom' => $user->getNom(),
-        ':prenom' => $user->getPrenom(),
-        ':email' => $user->getEmail(),
-        ':telephone' => $user->getTelephone(),
-        ':hashed_password' => $hashed_password,
-        ':role' => $user->getRole() 
-    ];
-    
+            INSERT INTO UTILISATEUR (nom, prenom, email, telephone, mot_de_passe, role, is_verified, verification_token)
+            VALUES (:nom, :prenom, :email, :telephone, :hashed_password, :role, 0, :verification_token)
+        "); // <- ИЗМЕНЕН SQL
+
+        $params = [
+            ':nom' => $user->getNom(),
+            ':prenom' => $user->getPrenom(),
+            ':email' => $user->getEmail(),
+            ':telephone' => $user->getTelephone(),
+            ':hashed_password' => $hashed_password,
+            ':role' => $user->getRole(),
+            ':verification_token' => $verificationToken // <- ДОБАВЛЕНИЕ ПАРАМЕТРА
+        ];
         
         if ($stmt->execute($params)) {
             return (int) $this->db->lastInsertId();
@@ -112,4 +118,39 @@ class UserManager {
             return false; 
         }
     }
+    /**
+     * Ищет пользователя по токену верификации.
+     * @param string $token Токен, пришедший из письма.
+     * @return array|bool Данные пользователя или false, если не найден/уже верифицирован.
+     */
+    public function findUserByToken(string $token): array|bool {
+        $stmt = $this->db->prepare("SELECT * FROM UTILISATEUR WHERE verification_token = :token AND is_verified = 0");
+        $stmt->execute([':token' => $token]);
+        // Возвращаем чистый ассоциативный массив, чтобы не создавать лишний объект User
+        return $stmt->fetch(PDO::FETCH_ASSOC); 
+    }
+
+    /**
+     * Помечает пользователя как верифицированного и очищает токен.
+     * @param int $userId ID пользователя.
+     * @return bool Успех операции.
+     */
+    public function verifyUser(int $userId): bool {
+        $stmt = $this->db->prepare("UPDATE UTILISATEUR SET is_verified = 1, verification_token = NULL WHERE id = :id");
+        return $stmt->execute([':id' => $userId]);
+    }
+
+    /**
+     * Ищет данные пользователя по email (возвращает чистый массив).
+     *
+     * @param string $email Email пользователя.
+     * @return array|bool Данные пользователя (ассоциативный массив) или false, если не найден.
+     */
+   public function findUserByEmail(string $email): array|bool {
+    // Исправлено: mot_de_passe_hash заменено на mot_de_passe
+    $stmt = $this->db->prepare("SELECT id, nom, prenom, email, telephone, mot_de_passe, role, is_verified FROM UTILISATEUR WHERE email = :email");
+    $stmt->execute([':email' => $email]);
+    
+    return $stmt->fetch(PDO::FETCH_ASSOC); 
+}
 }

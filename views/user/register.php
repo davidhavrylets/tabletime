@@ -1,56 +1,44 @@
-<div class="container">
-    <h1>Регистрация</h1>
+<div class="container register-form-container">
+    <h2>Регистрация</h2>
 
     <?php if (isset($error)): ?>
-        <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
+        <p class="error-message" style="color: red; font-weight: bold;"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
 
-    <form action="?route=register" method="POST" style="max-width: 400px; margin: 0 auto;">
+    <form action="?route=register" method="POST" class="styled-form">
         
-        <div style="margin-bottom: 15px;">
-            <label for="prenom">Имя (Prenom):</label>
-            <input type="text" id="prenom" name="prenom" required>
+        <div class="form-group">
+            <label for="nom">Ваше Имя (Nom):</label>
+            <input type="text" id="nom" name="nom" value="<?php echo htmlspecialchars($nom ?? ''); ?>" required>
         </div>
         
-        <div style="margin-bottom: 15px;">
-            <label for="nom">Фамилия (Nom):</label>
-            <input type="text" id="nom" name="nom" required>
+        <div class="form-group">
+            <label for="email">Email (Используется для входа):</label>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email ?? ''); ?>" required>
         </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="telephone">Телефон (необязательно):</label>
-            <input type="text" id="telephone" name="telephone">
-        </div>
-        
-        <div style="margin-bottom: 15px;">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        
-        <hr style="margin: 20px 0;">
 
-        <div id="owner-code-field" style="margin-bottom: 15px; display: none;">
-            <label for="secret_code">Секретный Код Владельца:</label>
-            <input type="text" id="secret_code" name="secret_code" placeholder="Введите код для администратора">
+        <div class="form-group">
+            <label for="mot_de_passe">Пароль (Mot de passe):</label>
+            <input type="password" id="mot_de_passe" name="mot_de_passe" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mot_de_passe_confirm">Подтверждение Пароля:</label>
+            <input type="password" id="mot_de_passe_confirm" name="mot_de_passe_confirm" required>
         </div>
         
-        <button type="submit" name="register_client" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
-            Зарегистрироваться как Клиент
-        </button>
+        <hr>
         
-        <button type="submit" id="owner-register-btn" name="register_owner" style="padding: 10px 20px; background-color: #ffc107; color: black; border: none; cursor: pointer; margin-left: 10px; display: none;">
-            Подтвердить Регистрацию Владельца
-        </button>
+        <div class="form-group privacy-checkbox">
+            <input type="checkbox" id="privacy_policy" name="privacy_policy" required>
+            <label for="privacy_policy">Я согласен с <a href="#" target="_blank">Политикой конфиденциальности</a> и условиями использования.</label>
+        </div>
         
-        <button type="button" id="toggle_owner_register" style="padding: 10px 20px; background-color: #ffc107; color: black; border: none; cursor: pointer; margin-left: 10px;">
-            Я - Владелец Ресторана
-        </button>
+        <button type="submit" class="btn btn-primary">Зарегистрироваться (S'inscrire)</button>
     </form>
-</div>
+    
+    <p class="link-to-login">
+        Уже есть аккаунт? <a href="?route=login">Войдите (Connexion)</a>
+    </p>
 
-<script src="assets/js/auth.js" defer></script>
+</div>

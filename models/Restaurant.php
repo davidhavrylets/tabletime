@@ -10,9 +10,9 @@ class Restaurant {
         $this->db = $database->getPdo();
     }
 
- 
     public function createRestaurant($nom, $adresse, $description, $utilisateurId) {
-        $sql = "INSERT INTO restaurant (nom, adresse, description, UTILISATEUR_id) 
+        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        $sql = "INSERT INTO restaurant (nom, adresse, description, utilisateur_id) 
                 VALUES (:nom, :adresse, :description, :utilisateurId)";
         
         $stmt = $this->db->prepare($sql);
@@ -33,6 +33,7 @@ class Restaurant {
     }
     
     public function getRestaurants(string $search = '', string $sort = 'id', string $order = 'ASC') {
+        // ... (Цей код був у порядку)
         $sql = "SELECT * FROM restaurant WHERE 1=1";
         $params = [];
         
@@ -55,7 +56,8 @@ class Restaurant {
     }
 
     public function getRestaurantById($id) {
-        $sql = "SELECT * FROM restaurant WHERE id = :id";
+        // (ВИПРАВЛЕНО) Явно вказуємо 'utilisateur_id' (маленькі літери)
+        $sql = "SELECT id, nom, adresse, description, utilisateur_id FROM restaurant WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -65,13 +67,11 @@ class Restaurant {
     }
 
     /**
-     * 1. МЕТОД В ЕДИНСТВЕННОМ ЧИСЛЕ (КОТОРЫЙ ИСПРАВИТ ОШИБКУ)
-     * (Используется в TableController и ReservationController)
-     * (Этот метод у вас уже был, но, видимо, пропал)
+     * 1. МЕТОД В ЕДИНСТВЕННОМ ЧИСЛЕ
      */
     public function getRestaurantByUserId($userId) {
-        // Убедитесь, что колонка 'UTILISATEUR_id' (из вашего кода)
-        $sql = "SELECT * FROM restaurant WHERE UTILISATEUR_id = :userId";
+        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        $sql = "SELECT * FROM restaurant WHERE utilisateur_id = :userId";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':userId', $userId);
         $stmt->execute();
@@ -80,10 +80,10 @@ class Restaurant {
 
     /**
      * 2. МЕТОД ВО МНОЖЕСТВЕННОМ ЧИСЛЕ
-     * (Используется в RestaurantController для админ-панели 'restaurant/list')
      */
     public function getRestaurantsByUserId($userId) {
-        $sql = "SELECT * FROM restaurant WHERE UTILISATEUR_id = :user_id";
+        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        $sql = "SELECT * FROM restaurant WHERE utilisateur_id = :user_id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $stmt->execute();
@@ -91,6 +91,7 @@ class Restaurant {
     }
 
     public function updateRestaurant($id, $nom, $adresse, $description) {
+        // ... (Цей код був у порядку, оскільки не чіпав ID власника)
         $sql = "UPDATE restaurant 
                 SET nom = :nom, adresse = :adresse, description = :description 
                 WHERE id = :id";
@@ -106,7 +107,8 @@ class Restaurant {
     }
 
     public function deleteRestaurant($id) {
-        if ($id == 1) { // (Ваша защитная логика)
+        // ... (Цей код був у порядку)
+        if ($id == 1) { 
             return false;
         }
         $sql = "DELETE FROM restaurant WHERE id = :id";
@@ -117,10 +119,10 @@ class Restaurant {
 
     /**
      * 3. МЕТОД ПРОВЕРКИ ВЛАДЕЛЬЦА
-     * (Используется в RestaurantController для edit() и delete())
      */
     public function isOwnerOfRestaurant($userId, $restaurantId) {
-        $sql = "SELECT id FROM restaurant WHERE id = :restaurantId AND UTILISATEUR_id = :userId";
+        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        $sql = "SELECT id FROM restaurant WHERE id = :restaurantId AND utilisateur_id = :userId";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':restaurantId', $restaurantId, PDO::PARAM_INT);
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
