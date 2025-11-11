@@ -19,6 +19,8 @@ Thumbs.db
 /uploads/
 /assets/uploads/
 
+config/mail.php
+
 /vendor/
 composer.lock
 

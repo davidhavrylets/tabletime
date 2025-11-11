@@ -1,20 +1,15 @@
 <?php
 // models/ReservationManager.php
+require_once __DIR__ . '/AbstractManager.php';
 
-require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/Reservation.php'; 
 
-class ReservationManager {
-    private $db;
-
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getPdo();
-    }
+class ReservationManager extends AbstractManager {
+    
 
     public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
         
-        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        
         $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
                 VALUES (:user_id, :restaurant_id, :table_id, :reservation_date, :reservation_time, :number_of_guests, :remarques, 'en attente')";
         
@@ -65,7 +60,7 @@ class ReservationManager {
     }
 
     public function confirmReservation($reservationId) {
-        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        
         $sql = "UPDATE reservation SET statut = 'confirmée' WHERE id = :id AND statut = 'en attente'";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
@@ -73,16 +68,14 @@ class ReservationManager {
     }
 
     public function cancelReservation($reservationId) {
-        // ИСПРАВЛЕНО: 'status' -> 'statut'
+        
         $sql = "UPDATE reservation SET statut = 'annulée' WHERE id = :id AND statut != 'annulée'";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
         return $stmt->execute();
     }
     
-    // --- 
-    // --- МЕТОД, КОТОРЫЙ ВЫЗВАЛ ОШИБКУ ---
-    // --- 
+   
     public function findAvailableTable($restaurantId, $date, $time, $guests) {
         $sql = "
             SELECT t.id
@@ -98,10 +91,7 @@ class ReservationManager {
             LIMIT 1
         ";
 
-        // ---
-        // --- ВОТ ИСПРАВЛЕНИЕ (строка 104) ---
-        // --- $this.db -> $this->db
-        // ---
+       
         $stmt = $this->db->prepare($sql); 
         
         $stmt->bindParam(':restaurant_id', $restaurantId, PDO::PARAM_INT);
@@ -114,18 +104,16 @@ class ReservationManager {
         $table = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($table) {
-            return $table['id']; // Возвращаем ID столика
+            return $table['id']; 
         } else {
-            return false; // Нет свободных столиков
+            return false; 
         }
     }
     
-    // --- Ваши методы для комиссии (из .txt) ---
+   
     public function getCommissionRate($restaurantId) {
         return 0.10; // Пример
     }
 
-    public function calculateCommission($reservationId) {
-        // ... (Логика комиссии)
-    }
+   
 }

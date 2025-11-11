@@ -7,7 +7,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
-// --- ИСПРАВЛЕННЫЕ ПУТИ: ДОБАВЛЕНА ПАПКА /src/ ---
+
 require __DIR__ . '/libraries/PHPMailer/src/Exception.php';
 require __DIR__ . '/libraries/PHPMailer/src/PHPMailer.php';
 require __DIR__ . '/libraries/PHPMailer/src/SMTP.php';

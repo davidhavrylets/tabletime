@@ -1,19 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../config/Database.php';
 
-class Reservation {
-    private $db;
+require_once __DIR__ . '/AbstractManager.php';
 
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getPdo();
-    }
+class Reservation extends AbstractManager {
+    
 
-    /**
-     * Поиск подходящего столика для бронирования.
-     * Возвращает ID свободного столика, соответствующего вместимости.
-     */
+    
     public function findAvailableTable($restaurantId, $date, $time, $guests) {
         
         

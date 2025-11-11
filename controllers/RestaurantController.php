@@ -4,9 +4,7 @@ require_once __DIR__ . '/../models/Restaurant.php';
 
 class RestaurantController {
     
-    /**
-     * 1. ПУБЛИЧНЫЙ МЕТОД (для ?route=home)
-     */
+   
     public function indexPublic() {
         $search = $_GET['search'] ?? '';
         $sort = $_GET['sort'] ?? 'id';
@@ -20,11 +18,11 @@ class RestaurantController {
     }
 
     /**
-     * 2. АДМИН-ПАНЕЛЬ (для ?route=restaurant/list)
+     * 2. АДМИН-ПАНЕЛЬ 
      */
     public function list() {
         
-        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
+        
         if (!isset($_SESSION['user_id'])) { 
             header('Location: ?route=login'); 
             exit; 
@@ -34,7 +32,7 @@ class RestaurantController {
             header('Location: ?route=home'); 
             exit;
         }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        
 
         $restaurantModel = new Restaurant();
         
@@ -44,16 +42,14 @@ class RestaurantController {
     }
 
     
-    /**
-     * 3. СОЗДАНИЕ РЕСТОРАНА
-     */
+   
     public function create() {
-        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
+        
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
         }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        
 
         $error = null;
         $success = null;
@@ -61,8 +57,7 @@ class RestaurantController {
         $restaurantModel = new Restaurant();
         $userId = $_SESSION['user_id'];
 
-        // 💥 УДАЛЕНА ПРОВЕРКА, КОТОРАЯ ЗАПРЕЩАЛА ВТОРОЙ РЕСТОРАН. 
-        // Теперь владелец может иметь несколько ресторанов.
+       
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nom = $_POST['nom'] ?? '';
@@ -72,12 +67,12 @@ class RestaurantController {
             $isCreated = $restaurantModel->createRestaurant($nom, $adresse, $description, $userId);
             
             if ($isCreated) {
-                // Если пользователь был клиентом, обновляем роль!
+                
                 $_SESSION['user_role'] = 'owner'; 
                 
                 $_SESSION['success_message'] = "Ресторан '{$nom}' успешно создан! Теперь вы можете добавить столики.";
                 
-                // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+                
                 header('Location: ?route=restaurant/list'); 
                 exit;
             } else {
@@ -94,7 +89,7 @@ class RestaurantController {
      */
     public function delete() {
         
-        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
+        
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
@@ -104,7 +99,7 @@ class RestaurantController {
             header('Location: ?route=home');
             exit;
         }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        
 
         $restaurantId = $_GET['id'] ?? null;
         $userId = $_SESSION['user_id'];
@@ -112,13 +107,13 @@ class RestaurantController {
         if ($restaurantId) {
             $restaurantModel = new Restaurant();
             
-            // --- ПРОВЕРКА ВЛАДЕНИЯ ---
+           
             if (!$restaurantModel->isOwnerOfRestaurant($userId, $restaurantId)) {
                  $_SESSION['error_message'] = "Вы не можете удалить этот ресторан.";
                  header('Location: ?route=restaurant/list');
                  exit;
             }
-            // --- КОНЕЦ ПРОВЕРКИ ---
+           
             
             $isDeleted = $restaurantModel->deleteRestaurant($restaurantId);
 
@@ -133,11 +128,9 @@ class RestaurantController {
         exit;
     } 
 
-    /**
-     * 5. РЕДАКТИРОВАНИЕ РЕСТОРАНА
-     */
+    
     public function edit() {
-        // --- ПРОВЕРКА АВТОРИЗАЦИИ И РОЛИ ---
+        
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
@@ -147,20 +140,20 @@ class RestaurantController {
             header('Location: ?route=home');
             exit;
         }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        
 
         $id = $_GET['id'] ?? null; 
         $userId = $_SESSION['user_id'];
         $restaurantModel = new Restaurant();
         
-        // --- ПРОВЕРКА ВЛАДЕНИЯ ---
+        
         if (!$id || !$restaurantModel->isOwnerOfRestaurant($userId, $id)) {
              $_SESSION['error_message'] = "Вы не можете редактировать этот ресторан.";
-             // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+             
              header('Location: ?route=restaurant/list'); 
              exit;
         }
-        // --- КОНЕЦ ПРОВЕРКИ ---
+        
 
         $restaurant = $restaurantModel->getRestaurantById($id);
 
@@ -173,7 +166,7 @@ class RestaurantController {
 
             if ($isUpdated) {
                 $_SESSION['success_message'] = "Ресторан '{$nom}' успешно обновлен.";
-                // 💥 ИСПРАВЛЕНО: Перенаправляем на СПИСОК РЕСТОРАНОВ
+                
                 header('Location: ?route=restaurant/list'); 
                 exit;
             } else {

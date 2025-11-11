@@ -1,27 +1,17 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/AbstractManager.php'; 
 require_once __DIR__ . '/User.php';
 
-class UserManager {
-    private $db;
+class UserManager extends AbstractManager {
 
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getPdo();
-    }
-
-    /**
-     * Регистрирует нового пользователя с токеном верификации.
-     * @param User $user Объект пользователя с данными.
-     * @param string $verificationToken Токен, сгенерированный контроллером.
-     * @return int|null ID нового пользователя или null в случае неудачи.
-     */
-    public function register(User $user, string $verificationToken): ?int { // <- ИЗМЕНЕНИЕ СИГНАТУРЫ
+    
+    
+    public function register(User $user, string $verificationToken): ?int { 
         $stmt = $this->db->prepare("SELECT id FROM UTILISATEUR WHERE email = :email");
         $stmt->execute([':email' => $user->getEmail()]);
         if ($stmt->fetch()) {
-            return null; // Пользователь уже существует
+            return null; 
         }
 
         $hashed_password = password_hash($user->getMotDePasse(), PASSWORD_BCRYPT, ['cost' => 12]);
@@ -38,7 +28,7 @@ class UserManager {
             ':telephone' => $user->getTelephone(),
             ':hashed_password' => $hashed_password,
             ':role' => $user->getRole(),
-            ':verification_token' => $verificationToken // <- ДОБАВЛЕНИЕ ПАРАМЕТРА
+            ':verification_token' => $verificationToken 
         ];
         
         if ($stmt->execute($params)) {
@@ -86,9 +76,7 @@ class UserManager {
         return null;
     }
     
-    /**
-     * Обновляет данные пользователя в БД.
-     */
+    
     public function update(User $user, $password = null): bool {
         
         $sql = "UPDATE UTILISATEUR SET nom = :nom, prenom = :prenom, email = :email, telephone = :telephone"; 
@@ -118,36 +106,23 @@ class UserManager {
             return false; 
         }
     }
-    /**
-     * Ищет пользователя по токену верификации.
-     * @param string $token Токен, пришедший из письма.
-     * @return array|bool Данные пользователя или false, если не найден/уже верифицирован.
-     */
+    
     public function findUserByToken(string $token): array|bool {
         $stmt = $this->db->prepare("SELECT * FROM UTILISATEUR WHERE verification_token = :token AND is_verified = 0");
         $stmt->execute([':token' => $token]);
-        // Возвращаем чистый ассоциативный массив, чтобы не создавать лишний объект User
+        
         return $stmt->fetch(PDO::FETCH_ASSOC); 
     }
 
-    /**
-     * Помечает пользователя как верифицированного и очищает токен.
-     * @param int $userId ID пользователя.
-     * @return bool Успех операции.
-     */
+    
+    
     public function verifyUser(int $userId): bool {
         $stmt = $this->db->prepare("UPDATE UTILISATEUR SET is_verified = 1, verification_token = NULL WHERE id = :id");
         return $stmt->execute([':id' => $userId]);
     }
 
-    /**
-     * Ищет данные пользователя по email (возвращает чистый массив).
-     *
-     * @param string $email Email пользователя.
-     * @return array|bool Данные пользователя (ассоциативный массив) или false, если не найден.
-     */
+   
    public function findUserByEmail(string $email): array|bool {
-    // Исправлено: mot_de_passe_hash заменено на mot_de_passe
     $stmt = $this->db->prepare("SELECT id, nom, prenom, email, telephone, mot_de_passe, role, is_verified FROM UTILISATEUR WHERE email = :email");
     $stmt->execute([':email' => $email]);
     

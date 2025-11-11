@@ -1,12 +1,12 @@
 <?php
 // controllers/ReservationController.php
 
-require_once __DIR__ . '/../models/Reservation.php'; // Entity (у вас было)
-require_once __DIR__ . '/../models/Restaurant.php'; // (у вас было)
+require_once __DIR__ . '/../models/Reservation.php'; 
+require_once __DIR__ . '/../models/Restaurant.php'; 
 
-// --- ВОТ СТРОКА, КОТОРОЙ НЕ ХВАТАЛО ---
+
 require_once __DIR__ . '/../models/ReservationManager.php'; 
-// ---
+
 
 class ReservationController {
     
@@ -20,7 +20,7 @@ class ReservationController {
             exit;
         }
 
-        // ИСПРАВЛЕНО: Используем ReservationManager для получения данных
+        
         $reservationModel = new ReservationManager(); 
         $userId = $_SESSION['user_id'];
         $reservations = $reservationModel->getReservationsByUserId($userId);
@@ -28,22 +28,20 @@ class ReservationController {
         require_once __DIR__ . '/../views/reservation/list.php';
     }
 
-    /**
-     * 2. Подтверждение брони (Только ВЛАДЕЛЕЦ)
-     */
+    
     public function confirm() {
-        // ... (проверки роли) ...
+        
         if ($_SESSION['user_role'] !== 'owner') {
             header('Location: ?route=home');
             exit;
         }
 
         $reservationId = $_GET['id'] ?? null;
-        // ...
+        
 
         $userId = $_SESSION['user_id'];
         
-        // ИСПРАВЛЕНО: Используем ReservationManager
+        
         $reservationModel = new ReservationManager(); 
         $restaurantModel = new Restaurant();
 
@@ -64,38 +62,36 @@ class ReservationController {
      * 3. Отмена брони (Только ВЛАДЕЛЕЦ)
      */
     public function cancel() {
-        // ... (проверки роли) ...
+        
         if ($_SESSION['user_role'] !== 'owner') {
             header('Location: ?route=home');
             exit;
         }
 
         $reservationId = $_GET['id'] ?? null;
-        // ...
+       
         
         $userId = $_SESSION['user_id'];
-        // ИСПРАВЛЕНО: Используем ReservationManager
+        
         $reservationModel = new ReservationManager(); 
         $restaurantModel = new Restaurant();
         
         $reservationDetails = $reservationModel->getReservationById($reservationId); 
         if (!$reservationDetails || !$restaurantModel->isOwnerOfRestaurant($userId, $reservationDetails['restaurant_id'])) {
-             // ...
+             
              header('Location: ?route=reservation/manage');
              exit;
         }
         
         $isCancelled = $reservationModel->cancelReservation($reservationId);
-        // ...
+        
         header('Location: ?route=reservation/manage');
         exit;
     }
 
-    /**
-     * 4. Управление бронями (Только ВЛАДЕЛЕЦ)
-     */
+    
     public function manage() {
-        // ... (проверки роли) ...
+        
         if ($_SESSION['user_role'] !== 'owner') {
             header('Location: ?route=home');
             exit;
@@ -113,7 +109,7 @@ class ReservationController {
         }
         
         $restaurantId = $restaurant['id'];
-        // ИСПРАВЛЕНО: Используем ReservationManager
+        
         $reservationModel = new ReservationManager(); 
         $reservations = $reservationModel->getReservationsByRestaurantId($restaurantId);
         $userRestaurant = $restaurant; 
@@ -122,9 +118,7 @@ class ReservationController {
     }
 
 
-    /**
-     * 5. Создание брони (ИСПРАВЛЕНО)
-     */
+    
     public function create() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
@@ -138,7 +132,7 @@ class ReservationController {
 
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // ИСПРАВЛЕНО: Используем ReservationManager (как и было)
+            
             $reservationModel = new ReservationManager(); 
             
             $restaurantId = filter_input(INPUT_POST, 'restaurant_id', FILTER_VALIDATE_INT);
@@ -170,12 +164,12 @@ class ReservationController {
                 list($hours, $minutes) = explode(':', $time);
                 $totalMinutes = (int)$hours * 60 + (int)$minutes;
                 
-                // --- ИСПРАВЛЕНИЕ (1800 -> 30) ---
+                
                 if ($totalMinutes % 30 !== 0) { 
                     $error = "Время бронирования должно быть кратно 30 минутам (например, 12:00 или 12:30).";
                 }
             }
-            // --- КОНЕЦ ВАЛИДАЦИИ ---
+            
 
             if (!$error) {
                 

@@ -1,17 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/AbstractManager.php';
 
-class Restaurant {
-    private $db;
-
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getPdo();
-    }
+class Restaurant extends AbstractManager {
 
     public function createRestaurant($nom, $adresse, $description, $utilisateurId) {
-        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        
         $sql = "INSERT INTO restaurant (nom, adresse, description, utilisateur_id) 
                 VALUES (:nom, :adresse, :description, :utilisateurId)";
         
@@ -33,7 +27,7 @@ class Restaurant {
     }
     
     public function getRestaurants(string $search = '', string $sort = 'id', string $order = 'ASC') {
-        // ... (Цей код був у порядку)
+        
         $sql = "SELECT * FROM restaurant WHERE 1=1";
         $params = [];
         
@@ -56,7 +50,7 @@ class Restaurant {
     }
 
     public function getRestaurantById($id) {
-        // (ВИПРАВЛЕНО) Явно вказуємо 'utilisateur_id' (маленькі літери)
+        
         $sql = "SELECT id, nom, adresse, description, utilisateur_id FROM restaurant WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
@@ -66,11 +60,9 @@ class Restaurant {
         return $restaurant;
     }
 
-    /**
-     * 1. МЕТОД В ЕДИНСТВЕННОМ ЧИСЛЕ
-     */
+ 
     public function getRestaurantByUserId($userId) {
-        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        
         $sql = "SELECT * FROM restaurant WHERE utilisateur_id = :userId";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':userId', $userId);
@@ -78,11 +70,9 @@ class Restaurant {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * 2. МЕТОД ВО МНОЖЕСТВЕННОМ ЧИСЛЕ
-     */
+   
     public function getRestaurantsByUserId($userId) {
-        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+       
         $sql = "SELECT * FROM restaurant WHERE utilisateur_id = :user_id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
@@ -91,7 +81,7 @@ class Restaurant {
     }
 
     public function updateRestaurant($id, $nom, $adresse, $description) {
-        // ... (Цей код був у порядку, оскільки не чіпав ID власника)
+        
         $sql = "UPDATE restaurant 
                 SET nom = :nom, adresse = :adresse, description = :description 
                 WHERE id = :id";
@@ -107,7 +97,7 @@ class Restaurant {
     }
 
     public function deleteRestaurant($id) {
-        // ... (Цей код був у порядку)
+        
         if ($id == 1) { 
             return false;
         }
@@ -117,11 +107,9 @@ class Restaurant {
         return $stmt->execute();
     }
 
-    /**
-     * 3. МЕТОД ПРОВЕРКИ ВЛАДЕЛЬЦА
-     */
+    
     public function isOwnerOfRestaurant($userId, $restaurantId) {
-        // (ВИПРАВЛЕНО) Використовуємо 'utilisateur_id' (маленькі літери)
+        
         $sql = "SELECT id FROM restaurant WHERE id = :restaurantId AND utilisateur_id = :userId";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':restaurantId', $restaurantId, PDO::PARAM_INT);

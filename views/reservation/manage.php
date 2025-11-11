@@ -2,7 +2,7 @@
     <h1>Управление бронированиями ресторана</h1>
 
     <?php 
-    // === БЛОК ДЛЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ (Используем .alert) ===
+    
     
     // Сообщение об успехе
     if (isset($_SESSION['success_message'])): ?>
@@ -10,7 +10,7 @@
         <?php unset($_SESSION['success_message']); 
     endif;
 
-    // Сообщение об ошибке (после редиректа)
+    
     if (isset($_SESSION['error_message'])): ?>
         <div class="alert alert-error"><?php echo $_SESSION['error_message']; ?></div>
         <?php unset($_SESSION['error_message']); 
