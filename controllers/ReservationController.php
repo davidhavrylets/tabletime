@@ -198,20 +198,26 @@ class ReservationController {
         } 
         
         // --- Логика GET-запроса (она у вас правильная) ---
-        if (isset($_GET['id'])) {
-            $restaurantId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-            $restaurant = $restaurantModel->getRestaurantById($restaurantId);
-            
-            if (!$restaurant) {
-                 $_SESSION['error_message'] = "Ресторан не найден.";
-                 header('Location: ?route=home'); 
-                 exit;
-            }
-        } else {
-             $_SESSION['error_message'] = "Ресторан не выбран.";
-             header('Location: ?route=home'); 
-             exit;
-        }
+       if (isset($_GET['restaurant_id'])) {
+    
+    // ВАЖНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ: ищем 'restaurant_id' вместо 'id'
+    $restaurantId = filter_input(INPUT_GET, 'restaurant_id', FILTER_VALIDATE_INT);
+    
+    // Получаем данные ресторана
+    $restaurant = $restaurantModel->getRestaurantById($restaurantId);
+    
+    if (!$restaurant) {
+        $_SESSION['error_message'] = "Ресторан не найден.";
+        header('Location: ?route=home'); 
+        exit;
+    }
+    
+// Если GET-параметр вообще не был передан, выводим ошибку
+} else {
+    $_SESSION['error_message'] = "Ресторан не выбран.";
+    header('Location: ?route=home'); 
+    exit;
+}
 
         require_once __DIR__ . '/../views/reservation/create.php';
     }

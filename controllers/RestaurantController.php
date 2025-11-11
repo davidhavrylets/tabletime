@@ -45,43 +45,77 @@ class RestaurantController {
    
     public function create() {
         
+        // 1. ПРОВЕРКА АВТОРИЗАЦИИ
         if (!isset($_SESSION['user_id'])) {
             header('Location: ?route=login');
             exit;
         }
         
-
         $error = null;
         $success = null;
         
         $restaurantModel = new Restaurant();
         $userId = $_SESSION['user_id'];
-
-       
+        $photoFilename = null; 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
             $nom = $_POST['nom'] ?? '';
             $adresse = $_POST['adresse'] ?? '';
             $description = $_POST['description'] ?? '';
             
-            $isCreated = $restaurantModel->createRestaurant($nom, $adresse, $description, $userId);
             
-            if ($isCreated) {
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
                 
-                $_SESSION['user_role'] = 'owner'; 
+                $file = $_FILES['photo'];
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                $maxFileSize = 5 * 1024 * 1024; 
+                $uploadDir = __DIR__ . '/../assets/images/restaurants/';
+
                 
-                $_SESSION['success_message'] = "Ресторан '{$nom}' успешно создан! Теперь вы можете добавить столики.";
+                if (!in_array($file['type'], $allowedTypes)) {
+                    $error = "Недопустимый тип файла. Разрешены только JPG, PNG и WebP.";
+                } elseif ($file['size'] > $maxFileSize) {
+                    $error = "Файл слишком большой. Максимальный размер 5MB.";
+                } else {
+                   
+                    $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                    $photoFilename = uniqid('resto_', true) . '.' . $fileExtension;
+                    $targetPath = $uploadDir . $photoFilename;
+
+                    
+                    if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+                        $error = "Не удалось переместить загруженный файл.";
+                        $photoFilename = null; 
+                    }
+                }
+            } 
+           
+            if ($error === null) {
                 
                 
-                header('Location: ?route=restaurant/list'); 
-                exit;
-            } else {
-                $error = "Ошибка при создании ресторана.";
+                $isCreated = $restaurantModel->createRestaurant($nom, $adresse, $description, $userId, $photoFilename);
+                
+                if ($isCreated) {
+                    
+                    $_SESSION['user_role'] = 'owner'; 
+                    $_SESSION['success_message'] = "Ресторан '{$nom}' успешно создан! Теперь вы можете добавить столики.";
+                    
+                    header('Location: ?route=restaurant/list'); 
+                    exit;
+                    
+                } else {
+                    $error = "Ошибка при создании ресторана в базе данных.";
+                    
+                    if ($photoFilename && file_exists($targetPath)) {
+                        unlink($targetPath);
+                    }
+                }
             }
         }
         
         require_once __DIR__ . '/../views/restaurant/create.php';
-    } 
+    }
     
     
     /**

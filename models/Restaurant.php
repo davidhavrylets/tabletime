@@ -4,10 +4,10 @@ require_once __DIR__ . '/AbstractManager.php';
 
 class Restaurant extends AbstractManager {
 
-    public function createRestaurant($nom, $adresse, $description, $utilisateurId) {
+   public function createRestaurant($nom, $adresse, $description, $utilisateurId, $photoFilename = null) {
         
-        $sql = "INSERT INTO restaurant (nom, adresse, description, utilisateur_id) 
-                VALUES (:nom, :adresse, :description, :utilisateurId)";
+        $sql = "INSERT INTO restaurant (nom, adresse, description, utilisateur_id, photo_filename) 
+                VALUES (:nom, :adresse, :description, :utilisateurId, :photo_filename)";
         
         $stmt = $this->db->prepare($sql);
         
@@ -15,6 +15,7 @@ class Restaurant extends AbstractManager {
         $stmt->bindParam(':adresse', $adresse);
         $stmt->bindParam(':description', $description);
         $stmt->bindParam(':utilisateurId', $utilisateurId); 
+        $stmt->bindParam(':photo_filename', $photoFilename); 
 
         return $stmt->execute();
     }
@@ -28,7 +29,7 @@ class Restaurant extends AbstractManager {
     
     public function getRestaurants(string $search = '', string $sort = 'id', string $order = 'ASC') {
         
-        $sql = "SELECT * FROM restaurant WHERE 1=1";
+        $sql = "SELECT id, nom, adresse, description, utilisateur_id, photo_filename FROM restaurant WHERE 1=1";
         $params = [];
         
         if (!empty($search)) {
@@ -51,7 +52,7 @@ class Restaurant extends AbstractManager {
 
     public function getRestaurantById($id) {
         
-        $sql = "SELECT id, nom, adresse, description, utilisateur_id FROM restaurant WHERE id = :id";
+       $sql = "SELECT id, nom, adresse, description, utilisateur_id, photo_filename FROM restaurant WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id);
         $stmt->execute();

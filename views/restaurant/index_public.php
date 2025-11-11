@@ -2,7 +2,7 @@
     <h2>Список Ресторанов</h2>
 
     <?php 
-    // Сообщения об успехе/ошибке (например, после бронирования)
+    // Сообщения об успехе/ошибке (оставляем без изменений)
     if (isset($_SESSION['success_message'])): ?>
         <p style="color: green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
         <?php unset($_SESSION['success_message']); 
@@ -16,34 +16,51 @@
     <?php if (empty($restaurants)): ?>
         <p>На данный момент нет доступных ресторанов.</p>
     <?php else: ?>
-        <table class="table" border="1" cellpadding="10" cellspacing="0" style="width: 100%;">
-            <thead>
-                <tr>
-                    <th>Название (Nom)</th>
-                    <th>Адрес (Adresse)</th>
-                    <th>Описание (Description)</th>
-                    <th>Бронирование</th> </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($restaurants as $restaurant): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($restaurant['nom']); ?></td>
-                        <td><?php echo htmlspecialchars($restaurant['adresse']); ?></td>
-                        <td>
-                            <?php 
-                            $desc = $restaurant['description'] ?? 'N/A';
-                            echo htmlspecialchars(substr($desc, 0, 50)) . (strlen($desc) > 50 ? '...' : ''); 
-                            ?>
-                        </td>
-                        
-                        <td style="text-align: center;">
-                            <a href="?route=reservation/create&id=<?php echo $restaurant['id']; ?>" style="padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none;">
-                                Забронировать
-                            </a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+        
+        <section class="restaurant-list">
+            
+            <?php foreach ($restaurants as $restaurant): ?>
+            
+            <div class="restaurant-card">
+                
+                <div class="card-image-container">
+    <img 
+        src="assets/images/restaurants/<?php 
+            
+            echo htmlspecialchars($restaurant['photo_filename'] ?? 'placeholder.png'); 
+        ?>" 
+        alt="Фотография ресторана <?php echo htmlspecialchars($restaurant['nom']); ?>"
+    >
+</div>
+
+                <div class="card-content">
+                    <h2 class="card-title"><?php echo htmlspecialchars($restaurant['nom']); ?></h2>
+                    
+                    <p class="card-address">
+                        <i class="fas fa-map-marker-alt"></i> 
+                        <?php echo htmlspecialchars($restaurant['adresse']); ?>
+                    </p>
+                    
+                    <p class="card-description">
+                        <?php 
+                        // Обрезаем описание до 100 символов
+                        $desc = htmlspecialchars($restaurant['description'] ?? '');
+                        echo strlen($desc) > 100 ? substr($desc, 0, 100) . '...' : $desc; 
+                        ?>
+                    </p>
+                    
+                    <div class="card-footer">
+                        <a 
+                            href="?route=reservation/create&restaurant_id=<?php echo $restaurant['id']; ?>" 
+                            class="btn btn-primary">
+                            Забронировать
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <?php endforeach; ?>
+            
+        </section>
+        <?php endif; ?>
 </div>

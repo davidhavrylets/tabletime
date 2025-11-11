@@ -11,33 +11,37 @@
 </head>
 <body>
     <header>
+    <div class="header-inner">
+        
+        <a href="?route=home" class="logo">
+            <img 
+                src="assets/images/tabletime_logo.png" 
+                alt="TableTime Logo" 
+                style="height: 40px; vertical-align: middle;" 
+                loading="lazy"
+            >
+        </a>
+        
         <nav>
-            <?php 
-           
-            $userRole = $_SESSION['user_role'] ?? 'guest';
-            ?>
-            
-            <a href="?route=home">Главная</a>
-            
-            <?php if ($userRole === 'owner'): ?>
+            <ul>
                 
-                <a href="?route=restaurant/list">Мои Рестораны</a>
-                
-                <a href="?route=reservation/manage">Упр. Бронями</a>
-                
-            <?php elseif ($userRole === 'client'): ?>
-                <a href="?route=reservation/list">Мои Бронирования</a>
-                
-            
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="?route=user/profile">Профиль (<?php echo htmlspecialchars($_SESSION['user_nom']); ?>)</a>
-                <a href="?route=logout">Выход</a>
-            <?php else: ?>
-                <a href="?route=register">Регистрация</a>
-                <a href="?route=login">Вход</a>
-            <?php endif; ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <?php if ($_SESSION['user_role'] === 'client'): ?>
+                        <li><a href="?route=reservation/list">Мои бронирования</a></li>
+                       <li><a href="?route=user/profile">Мой профиль</a></li> 
+                        <li><a href="?route=logout">Выйти</a></li>
+                    <?php elseif ($_SESSION['user_role'] === 'owner'): ?>
+                        <li><a href="?route=restaurant/list">Мои рестораны</a></li>
+                        <li><a href="?route=reservation/manage">Управление бронированиями</a></li>
+                        <li><a href="?route=logout">Выйти</a></li>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <li><a href="?route=register">Регистрация</a></li>
+                    <li><a href="?route=login">Войти</a></li>
+                <?php endif; ?>
+            </ul>
         </nav>
-    </header>
+        
+    </div>
+</header>
     <main>
