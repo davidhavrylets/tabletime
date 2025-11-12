@@ -88,11 +88,21 @@ class UserManager extends AbstractManager {
         $sql .= " WHERE id = :id"; 
         
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $user->getId(), PDO::PARAM_INT);
-        $stmt->bindParam(':nom', $user->getNom());
-        $stmt->bindParam(':prenom', $user->getPrenom());
-        $stmt->bindParam(':email', $user->getEmail());
-        $stmt->bindParam(':telephone', $user->getTelephone());
+        
+        
+        $id = $user->getId();
+        $nom = $user->getNom();
+        $prenom = $user->getPrenom();
+        $email = $user->getEmail();
+        $telephone = $user->getTelephone();
+        
+        
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':nom', $nom);
+        $stmt->bindParam(':prenom', $prenom);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':telephone', $telephone);
+       
         
         if ($password) {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -103,6 +113,7 @@ class UserManager extends AbstractManager {
             return $stmt->execute();
         } catch (PDOException $e) {
             
+           
             return false; 
         }
     }
