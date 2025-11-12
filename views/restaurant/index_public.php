@@ -1,8 +1,8 @@
 <div class="container">
-    <h2>Список Ресторанов</h2>
+    <h2>Liste des restaurants</h2>
 
     <?php 
-    // Сообщения об успехе/ошибке (оставляем без изменений)
+    
     if (isset($_SESSION['success_message'])): ?>
         <p style="color: green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
         <?php unset($_SESSION['success_message']); 
@@ -14,7 +14,7 @@
     ?>
 
     <?php if (empty($restaurants)): ?>
-        <p>На данный момент нет доступных ресторанов.</p>
+        <p>Il n'y a actuellement aucun restaurant disponible.</p>
     <?php else: ?>
         
         <section class="restaurant-list">
@@ -43,7 +43,7 @@
                     
                     <p class="card-description">
                         <?php 
-                        // Обрезаем описание до 100 символов
+                        
                         $desc = htmlspecialchars($restaurant['description'] ?? '');
                         echo strlen($desc) > 100 ? substr($desc, 0, 100) . '...' : $desc; 
                         ?>
@@ -53,7 +53,7 @@
                         <a 
                             href="?route=reservation/create&restaurant_id=<?php echo $restaurant['id']; ?>" 
                             class="btn btn-primary">
-                            Забронировать
+                            Réserver
                         </a>
                     </div>
                 </div>

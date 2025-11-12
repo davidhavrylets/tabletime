@@ -74,9 +74,9 @@ class RestaurantController {
 
                 
                 if (!in_array($file['type'], $allowedTypes)) {
-                    $error = "Недопустимый тип файла. Разрешены только JPG, PNG и WebP.";
+                    $error = "Type de fichier non autorisé. Seuls les formats JPG, PNG et WebP sont autorisés.";
                 } elseif ($file['size'] > $maxFileSize) {
-                    $error = "Файл слишком большой. Максимальный размер 5MB.";
+                    $error = "Le fichier est trop volumineux. La taille maximale est de 5 Mo.";
                 } else {
                    
                     $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -85,7 +85,7 @@ class RestaurantController {
 
                     
                     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-                        $error = "Не удалось переместить загруженный файл.";
+                        $error = "Impossible de déplacer le fichier téléchargé.";
                         $photoFilename = null; 
                     }
                 }
@@ -99,13 +99,12 @@ class RestaurantController {
                 if ($isCreated) {
                     
                     $_SESSION['user_role'] = 'owner'; 
-                    $_SESSION['success_message'] = "Ресторан '{$nom}' успешно создан! Теперь вы можете добавить столики.";
-                    
+                    $_SESSION['success_message'] = "Le restaurant « {$nom} » a été créé avec succès ! Vous pouvez maintenant ajouter des tables.";
                     header('Location: ?route=restaurant/list'); 
                     exit;
                     
                 } else {
-                    $error = "Ошибка при создании ресторана в базе данных.";
+                    $error = "Erreur lors de la création du restaurant dans la base de données.";
                     
                     if ($photoFilename && file_exists($targetPath)) {
                         unlink($targetPath);
@@ -129,7 +128,7 @@ class RestaurantController {
             exit;
         }
         if ($_SESSION['user_role'] !== 'owner') {
-            $_SESSION['error_message'] = "У вас нет прав доступа.";
+            $_SESSION['error_message'] = "Vous n'avez pas les droits d'accès.";
             header('Location: ?route=home');
             exit;
         }
@@ -143,7 +142,7 @@ class RestaurantController {
             
            
             if (!$restaurantModel->isOwnerOfRestaurant($userId, $restaurantId)) {
-                 $_SESSION['error_message'] = "Вы не можете удалить этот ресторан.";
+                 $_SESSION['error_message'] = "Vous ne pouvez pas supprimer ce restaurant.";
                  header('Location: ?route=restaurant/list');
                  exit;
             }
@@ -152,9 +151,9 @@ class RestaurantController {
             $isDeleted = $restaurantModel->deleteRestaurant($restaurantId);
 
             if ($isDeleted) {
-                $_SESSION['success_message'] = "Ресторан с ID {$restaurantId} успешно удален.";
+                $_SESSION['success_message'] = "Le restaurant avec l'ID {$restaurantId} a été supprimé avec succès.";
             } else {
-                $_SESSION['error_message'] = "Ошибка удаления ресторана.";
+                $_SESSION['error_message'] = "Erreur lors de la suppression du restaurant.";
             }
         }
         
@@ -170,7 +169,7 @@ class RestaurantController {
             exit;
         }
         if ($_SESSION['user_role'] !== 'owner') {
-            $_SESSION['error_message'] = "У вас нет прав доступа.";
+            $_SESSION['error_message'] = "Vous n'avez pas les droits d'accès.";
             header('Location: ?route=home');
             exit;
         }
@@ -182,7 +181,7 @@ class RestaurantController {
         
         
         if (!$id || !$restaurantModel->isOwnerOfRestaurant($userId, $id)) {
-             $_SESSION['error_message'] = "Вы не можете редактировать этот ресторан.";
+             $_SESSION['error_message'] = "Vous ne pouvez pas éditer ce restaurant.";
              
              header('Location: ?route=restaurant/list'); 
              exit;
@@ -199,12 +198,12 @@ class RestaurantController {
             $isUpdated = $restaurantModel->updateRestaurant($id, $nom, $adresse, $description);
 
             if ($isUpdated) {
-                $_SESSION['success_message'] = "Ресторан '{$nom}' успешно обновлен.";
+                $_SESSION['success_message'] = "Le restaurant « {$nom} » a été mis à jour avec succès.";
                 
                 header('Location: ?route=restaurant/list'); 
                 exit;
             } else {
-                $_SESSION['error_message'] = "Ошибка при обновлении ресторана.";
+                $_SESSION['error_message'] = "Erreur lors de la mise à jour du restaurant.";
             }
         }
         

@@ -20,7 +20,7 @@ class TableController {
         $redirectUrl = $restaurantId ? '?route=table/manage&restaurant_id=' . $restaurantId : '?route=restaurant/list';
 
         if (!$tableId) {
-            $_SESSION['error_message'] = "ID столика не предоставлен.";
+            $_SESSION['error_message'] = "Le numéro d'identification de la table n'est pas fourni.";
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -32,7 +32,7 @@ class TableController {
         $restaurant = $restaurantModel->getRestaurantById($table['restaurant_id']);
 
         if (!$table || !$restaurant || $restaurant['utilisateur_id'] != $userId) {
-            $_SESSION['error_message'] = "Столик не найден или у вас нет прав на его редактирование.";
+            $_SESSION['error_message'] = "La table n'a pas été trouvée ou vous n'avez pas les droits nécessaires pour la modifier.";
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -41,24 +41,24 @@ class TableController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $capacity = filter_input(INPUT_POST, 'capacite', FILTER_VALIDATE_INT);
-            // 💥 ИСПРАВЛЕНО: Используем 'numero'
+            
             $numero = trim($_POST['numero'] ?? ''); 
             
             if (!$capacity || $capacity <= 0 || empty($numero)) {
-                $error = "Пожалуйста, введите корректный номер/имя и вместимость.";
+                $error = "Veuillez saisir le numéro/nom et la capacité corrects.";
             } else {
-                // 💥 ИСПРАВЛЕНО: Передаем $numero
+                
                 if ($tableModel->updateTable($tableId, $capacity, $numero)) { 
-                    $_SESSION['success_message'] = "Столик '{$numero}' успешно обновлен.";
+                    $_SESSION['success_message'] = "La table « {$numero} » a été mise à jour avec succès.";
                     header('Location: ' . $redirectUrl);
                     exit;
                 } else {
-                    $error = "Ошибка при обновлении столика в базе данных.";
+                    $error = "Erreur lors de la mise à jour de la table dans la base de données.";
                 }
             }
             
             $table['capacite'] = $capacity; 
-            // 💥 ИСПРАВЛЕНО: Используем 'numero'
+            
             $table['numero'] = $numero;
         }
 
@@ -82,7 +82,7 @@ class TableController {
         $redirectUrl = $restaurantId ? '?route=table/manage&restaurant_id=' . $restaurantId : '?route=restaurant/list';
 
         if (!$tableId) {
-            $_SESSION['error_message'] = "ID столика не предоставлен.";
+            $_SESSION['error_message'] = "Le numéro d'identification de la table n'est pas fourni.";
             header('Location: ' . $redirectUrl);
             exit;
         }
@@ -94,17 +94,17 @@ class TableController {
         $restaurant = $restaurantModel->getRestaurantById($table['restaurant_id']);
 
         if (!$table || !$restaurant || $restaurant['utilisateur_id'] != $userId) {
-            $_SESSION['error_message'] = "Столик не найден или у вас нет прав на его удаление.";
+            $_SESSION['error_message'] = "La table n'a pas été trouvée ou vous n'avez pas les droits nécessaires pour la supprimer.";
             header('Location: ' . $redirectUrl);
             exit;
         }
         
         if ($tableModel->deleteTable($tableId)) {
-            // 💥 ИСПРАВЛЕНО: Используем 'numero'
+            
             $tableName = $table['numero'] ?? 'ID: ' . $table['id']; 
-            $_SESSION['success_message'] = "Столик '{$tableName}' успешно удален.";
+            $_SESSION['success_message'] = "La table « {$tableName} » a été supprimée avec succès.";
         } else {
-            $_SESSION['error_message'] = "Не удалось удалить столик.";
+            $_SESSION['error_message'] = "Impossible de supprimer la table.";
         }
 
         header('Location: ' . $redirectUrl);
@@ -134,7 +134,7 @@ class TableController {
         $userRestaurant = $restaurantModel->getRestaurantById($restaurantId); 
 
         if (!$userRestaurant || $userRestaurant['utilisateur_id'] != $ownerId) {
-            $_SESSION['error_message'] = "Ресторан не найден или у вас нет прав доступа. (ID ресторана: {$restaurantId}, ID владельца: {$ownerId})";
+            $_SESSION['error_message'] = "Le restaurant n'a pas été trouvé ou vous n'avez pas les droits d'accès. (ID du restaurant : {$restaurantId}, ID du propriétaire : {$ownerId})";
             header('Location: ?route=restaurant/list'); 
             exit;
         }
@@ -145,12 +145,12 @@ class TableController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $capacity = $_POST['capacite'] ?? null;
-            // 💥 ИСПРАВЛЕНО: Используем 'numero'
+            
             $numero = trim($_POST['numero'] ?? ''); 
 
             if ($capacity && is_numeric($capacity) && $capacity > 0 && !empty($numero)) {
                 
-                // 💥 ИСПРАВЛЕНО: Передаем $numero
+                
                 $isCreated = $tableModel->createTable((int)$capacity, $restaurantId, $numero); 
                 
                 if ($isCreated) {
@@ -158,10 +158,10 @@ class TableController {
                     header('Location: ?route=table/manage&restaurant_id=' . $restaurantId);
                     exit;
                 } else {
-                    $error = "Ошибка при добавлении столика в базу данных.";
+                    $error = "Erreur lors de l'ajout d'une table à la base de données.";
                 }
             } else {
-                $error = "Пожалуйста, введите корректный номер/имя и вместимость столика.";
+                $error = "Veuillez entrer un numéro/nom et une capacité de table valides.";
             }
         }
         

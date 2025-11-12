@@ -1,8 +1,8 @@
 <div class="container">
-    <h2>Список Ресторанов</h2>
+    <h2>Liste des Restaurants</h2>
 
     <?php 
-    // Вывод "прилипших" сообщений из сессии
+    
     if (isset($_SESSION['success_message'])): ?>
         <p style="color: green; font-weight: bold;"><?php echo $_SESSION['success_message']; ?></p>
         <?php unset($_SESSION['success_message']); 
@@ -16,20 +16,20 @@
     
     <p>
         <a href="?route=restaurant/create" class="btn btn-primary">
-            ➕ Добавить новый ресторан
+             Ajouter un nouveau restaurant
         </a>
     </p>
 
     <?php if (empty($restaurants)): ?>
-        <p>У вас пока нет ресторанов.</p>
+        <p>Vous n'avez pas encore de restaurants.</p>
     <?php else: ?>
-        <table class="table-styled">
+        <table class="table">
             <thead>
                 <tr>
-                    <th>Название (Nom)</th>
-                    <th>Адрес (Adresse)</th>
-                    <th>Описание (Description)</th>
-                    <th>Действия</th>
+                    <th>Nom</th>
+                    <th>Adresse</th>
+                    <th>Description</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,14 +41,14 @@
                     
                     <td>
                         <a href="?route=table/manage&restaurant_id=<?php echo $restaurant['id']; ?>" class="btn btn-primary btn-sm">
-                            🍽️ Столики
+                             Tables
                         </a>
                         
                         <a href="?route=restaurant/edit&id=<?php echo $restaurant['id']; ?>" class="btn btn-secondary btn-sm">
-                            ✏️ Редактировать
+                             Modifier
                         </a>
-                        <a href="?route=restaurant/delete&id=<?php echo $restaurant['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Уверены, что хотите удалить <?php echo htmlspecialchars($restaurant['nom']); ?>?');">
-                            🗑️ Удалить
+                        <a href="?route=restaurant/delete&id=<?php echo $restaurant['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer <?php echo htmlspecialchars($restaurant['nom']); ?> ?');">
+                             Supprimer
                         </a>
                     </td>
                 </tr>

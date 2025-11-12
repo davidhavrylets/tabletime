@@ -15,50 +15,47 @@ class UserController {
     }
 
     public function register() {
-        
+    
         $error = null; 
-        // Инициализируем переменные для сохранения данных в форме после ошибки
-        $nom = $_POST['nom'] ?? '';
+        // Инициализируем переменные, чтобы избежать ошибок "undefined" при первом рендере
+        $nom = $_POST['nom'] ?? ''; 
         $email = $_POST['email'] ?? '';
         
-        $SECRET_CODE = '200421'; // Секретный код оставляем, на случай, если логика владельца будет возвращена.
+        $SECRET_CODE = '200421'; 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
-            // Получаем данные из новой формы (mot_de_passe, mot_de_passe_confirm, privacy_policy)
             $motDePasse = $_POST['mot_de_passe'] ?? '';
             $motDePasseConfirm = $_POST['mot_de_passe_confirm'] ?? '';
-            $privacyPolicy = $_POST['privacy_policy'] ?? ''; // Новая обязательная галочка
-            
-            // --- 1. ПРОВЕРКА ВАЛИДНОСТИ И НОВЫХ ПОЛЕЙ ---
+            $privacyPolicy = $_POST['privacy_policy'] ?? '';
+            $ownerCode = $_POST['owner_code'] ?? ''; 
             
             if (empty($nom)) {
-                $error = "Будь ласка, введіть ваше ім'я.";
+                $error = "Veuillez entrer votre nom.";
             }
             
             if (empty($motDePasse) || empty($motDePasseConfirm)) {
-                $error = "Пароль не може бути порожнім.";
+                $error = "Le mot de passe ne peut pas être vide.";
             } elseif ($motDePasse !== $motDePasseConfirm) {
-                $error = "Паролі не співпадають.";
+                $error = "Les mots de passe ne correspondent pas.";
             }
 
-            // 💥 ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА: Принятие политики конфиденциальности
             if (!$error && empty($privacyPolicy)) {
-                $error = "Вы должны принять Политику конфиденциальности.";
+                $error = "Vous devez accepter la politique de confidentialité.";
             }
             
-            // При регистрации роль всегда 'client', старую логику выбора роли удаляем.
-            $role = 'client'; 
-            
-            // --- 2. ОБРАБОТКА РЕГИСТРАЦИИ ---
+            // --- ЛОГИКА ОПРЕДЕЛЕНИЯ РОЛИ ---
+            $role = 'client';
+            if (!$error && !empty($ownerCode) && $ownerCode === $SECRET_CODE) {
+                $role = 'owner';
+            }
+            // --- КОНЕЦ ЛОГИКИ ОПРЕДЕЛЕНИЯ РОЛИ ---
             
             if (!$error) {
                 
                 $user = new User();
 
                 try {
-                    // Устанавливаем поля. 'prenom' и 'telephone' устанавливаем в пустые строки,
-                    // поскольку их нет в новой форме регистрации.
                     $user->setNom($nom)
                          ->setPrenom('') 
                          ->setEmail($email)
@@ -74,12 +71,11 @@ class UserController {
                         
                         $verificationLink = "http://" . $_SERVER['HTTP_HOST'] . "/tabletime/?route=user/verify&token=" . $verificationToken;
                         
-                        $emailBody = "<h1>Подтверждение регистрации TableTime</h1>";
-                        // Используем Nom (Имя)
-                        $emailBody .= "<p>Здравствуйте, " . htmlspecialchars($user->getNom()) . ".</p>";
-                        $emailBody .= "<p>Чтобы завершить регистрацию и активировать ваш аккаунт, пожалуйста, перейдите по следующей ссылке:</p>";
-                        $emailBody .= "<p><a href='{$verificationLink}'>Активировать мой аккаунт</a></p>";
-                        $emailBody .= "<p>Если ссылка не работает, скопируйте ее в браузер: {$verificationLink}</p>";
+                        $emailBody = "<h1>Confirmation d'inscription TableTime</h1>";
+                        $emailBody .= "<p>Bonjour, " . htmlspecialchars($user->getNom()) . ".</p>";
+                        $emailBody .= "<p>Pour terminer votre inscription et activer votre compte, veuillez cliquer sur le lien suivant:</p>";
+                        $emailBody .= "<p><a href='{$verificationLink}'>Activer mon compte</a></p>";
+                        $emailBody .= "<p>Si le lien ne fonctionne pas, copiez-le dans votre navigateur : {$verificationLink}</p>";
 
                         $mailSent = $this->mailService->sendEmail(
                             $user->getEmail(), 
@@ -88,24 +84,27 @@ class UserController {
                         );
                         
                         if ($mailSent) {
-                            $_SESSION['success_message'] = "Вы успешно зарегистрированы! Пожалуйста, проверьте свою почту ({$user->getEmail()}) для активации аккаунта.";
+                            $_SESSION['success_message'] = "Vous êtes désormais inscrit ! Veuillez vérifier votre boîte mail. ({$user->getEmail()}) pour activer votre compte.";
                         } else {
-                            $_SESSION['error_message'] = "Регистрация успешна, но не удалось отправить письмо с подтверждением. Свяжитесь с поддержкой.";
+                            $_SESSION['error_message'] = "L'inscription a été effectuée avec succès, mais l'e-mail de confirmation n'a pas pu être envoyé. Veuillez contacter le service d'assistance.";
                         }
+                        
+                        // ГАРАНТИРУЕМ ПЕРЕНАПРАВЛЕНИЕ:
                         header('Location: ?route=login');
-                        die();
+                        exit; // Используем exit для надежной остановки скрипта
                         
                     } else {
-                        $error = "Ошибка: Email уже существует или проблема с регистрацией.";
+                        // ОШИБКА: Email уже существует (возвращается из UserManager)
+                        $error = "Erreur: Email déjà existant ou problème d'inscription.";
                     }
                 } catch (InvalidArgumentException $e) {
-                    $error = "Ошибка: " . $e->getMessage();
+                    $error = "Erreur: " . $e->getMessage();
                 }
             }
 
         } 
         
-        // Передаем $nom и $email, чтобы они сохранились в форме в случае ошибки
+        // Отображение формы с ошибкой (если она есть)
         require_once __DIR__ . '/../views/user/register.php';
     }
 
@@ -127,18 +126,18 @@ class UserController {
                 if (!$rawUserData || !isset($rawUserData['is_verified']) || (int)$rawUserData['is_verified'] === 0) {
                     session_unset();
                     session_destroy();
-                    $error = "Пожалуйста, проверьте свою почту и активируйте аккаунт перед входом.";
+                    $error = "Veuillez vérifier votre e-mail et activer votre compte avant de vous connecter.";
                 } else {
                     $_SESSION['user_id'] = $loggedInUser->getId();
                     $_SESSION['user_nom'] = $loggedInUser->getNom();
                     $_SESSION['user_role'] = $loggedInUser->getRole(); 
 
                     header('Location: ?route=home');
-                    die();
+                    exit; // ИСПОЛЬЗУЙТЕ exit
                 }
                 
             } else {
-                $error = "Неверный email или пароль.";
+                $error = "Adresse e-mail ou mot de passe incorrect.";
             }
         } 
         
@@ -149,7 +148,7 @@ class UserController {
         $token = $_GET['token'] ?? null;
         
         if (!$token) {
-            $_SESSION['error_message'] = "Недействительный или отсутствующий токен верификации.";
+            $_SESSION['error_message'] = "Jeton de vérification invalide ou manquant.";
             header('Location: ?route=login');
             exit;
         }
@@ -159,12 +158,12 @@ class UserController {
         if ($user) {
             
             if ($this->userManager->verifyUser($user['id'])) {
-                $_SESSION['success_message'] = "Ваш аккаунт успешно активирован! Теперь вы можете войти.";
+                $_SESSION['success_message'] = "Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.";
             } else {
-                $_SESSION['error_message'] = "Ошибка при активации аккаунта. Попробуйте позже.";
+                $_SESSION['error_message'] = "Erreur lors de l'activation du compte. Veuillez réessayer plus tard.";
             }
         } else {
-            $_SESSION['error_message'] = "Токен недействителен или ваш аккаунт уже активирован.";
+            $_SESSION['error_message'] = "Le jeton est invalide ou votre compte est déjà activé.";
         }
 
         header('Location: ?route=login');
@@ -174,96 +173,132 @@ class UserController {
     public function logout() {
         session_destroy();
         header('Location: ?route=home');
-        die();
+        exit; // ИСПОЛЬЗУЙТЕ exit
     }
     
     
+    // --- ИСПРАВЛЕННЫЙ МЕТОД PROFILE ---
     public function profile() {
         if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error_message'] = "Вы должны войти, чтобы просмотреть профиль.";
+            $_SESSION['error_message'] = "Vous devez vous connecter pour consulter votre profil.";
             header('Location: ?route=login');
             exit;
         }
 
         $userId = $_SESSION['user_id'];
-        
-        $user = $this->userManager->getUserById($userId);
         $error = null;
         $success = null;
 
+        
+        $user = $this->userManager->getUserById($userId);
+
         if (!$user) {
-            $_SESSION['error_message'] = "Пользователь не найден.";
+            $_SESSION['error_message'] = "Utilisateur non trouvé.";
             header('Location: ?route=home');
             exit;
         }
+        
         
         $user_data = [
             'prenom' => $user->getPrenom(),
             'nom' => $user->getNom(),
             'email' => $user->getEmail(),
             'telephone' => $user->getTelephone(),
+            'role' => $user->getRole(), 
         ];
 
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
-            $nom = trim($_POST['nom'] ?? '');
-            $prenom = trim($_POST['prenom'] ?? '');
-            $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-            $telephone = trim($_POST['telephone'] ?? '');
-            
-            $password = filter_input(INPUT_POST, 'password');
-            $password_confirm = filter_input(INPUT_POST, 'password_confirm');
-            
-            $user_data = [
-                'prenom' => $prenom,
-                'nom' => $nom,
-                'email' => $email,
-                'telephone' => $telephone,
-            ];
+            $action = $_POST['action_type'] ?? null; 
 
-            if (!$email) {
-                $error = "Некорректный формат Email.";
-            } 
-            
-            if (!empty($password) && $password !== $password_confirm) {
-                $error = "Пароли не совпадают.";
-            }
-
-            if (!$error) {
+            if ($action === 'update_info') {
+                // ===================================
+                // A. ЛОГИКА ОБНОВЛЕНИЯ ЛИЧНЫХ ДАННЫХ
+                // ===================================
+                $nom = trim($_POST['nom'] ?? '');
+                $prenom = trim($_POST['prenom'] ?? '');
+                $telephone = trim($_POST['telephone'] ?? '');
+                $email = $user->getEmail(); // Email не меняем
                 
-                try {
-                    $user->setNom($nom)
-                         ->setPrenom($prenom)
-                         ->setEmail($email)
-                         ->setTelephone($telephone);
-                } catch (InvalidArgumentException $e) {
-                    $error = $e->getMessage();
+                if (empty($nom) || empty($prenom)) {
+                    $error = "Le nom et le prénom sont obligatoires.";
+                }
+
+                if (!$error) {
+                    try {
+                        
+                        $user->setNom($nom)
+                            ->setPrenom($prenom)
+                            ->setTelephone($telephone);
+                        
+                        
+                        if ($this->userManager->update($user, null)) {
+                            $success = "Vos informations personnelles ont été mises à jour avec succès.";
+                            $_SESSION['user_nom'] = $user->getNom(); // Обновляем сессию
+                        } else {
+                            $error = "Erreur lors de la mise à jour des données. Veuillez réessayer.";
+                        }
+                    } catch (InvalidArgumentException $e) {
+                        $error = $e->getMessage();
+                    }
+                }
+                
+            } elseif ($action === 'change_password') {
+                // ===================================
+                // B. ЛОГИКА СМЕНЫ ПАРОЛЯ
+                // ===================================
+                $currentPassword = $_POST['current_password'] ?? '';
+                $newPassword = $_POST['new_password'] ?? '';
+                $confirmPassword = $_POST['confirm_password'] ?? '';
+                
+                
+                if (empty($newPassword) || $newPassword !== $confirmPassword) {
+                    $error = "Le nouveau mot de passe et sa confirmation ne correspondent pas.";
+                } 
+                
+                else {
+                    $currentUserData = $this->userManager->findUserByEmail($user->getEmail());
+                    
+                    if (!$currentUserData || !password_verify($currentPassword, $currentUserData['mot_de_passe'])) {
+                        $error = "Mot de passe actuel incorrect.";
+                    }
                 }
 
                 if (!$error) {
                     
-                    $passwordToUpdate = empty($password) ? null : $password;
-                    
-                    if ($this->userManager->update($user, $passwordToUpdate)) {
-                        $success = "Профиль успешно обновлен.";
-                        
-                        $_SESSION['user_nom'] = $user->getNom();
-                        
-                        $user = $this->userManager->getUserById($userId);
-                        $user_data = [
-                            'prenom' => $user->getPrenom(),
-                            'nom' => $user->getNom(),
-                            'email' => $user->getEmail(),
-                            'telephone' => $user->getTelephone(),
-                        ];
-                        
+                    if ($this->userManager->update($user, $newPassword)) {
+                        $success = "Le mot de passe a été changé avec succès !";
                     } else {
-                        $error = "Ошибка при обновлении профиля. Возможно, Email уже используется.";
+                        $error = "Erreur lors de la modification du mot de passe.";
                     }
                 }
             }
+            
+            
+        
+            
+            if ($success) {
+                $_SESSION['success_message'] = $success;
+            } elseif ($error) {
+                $_SESSION['error_message'] = $error;
+            }
+            
+            
+            
+            header('Location: ?route=user/profile');
+            exit;
         }
         
-        include 'views/user/profile.php';
-    }
+        $user = $this->userManager->getUserById($userId);
+        $user_data = [
+            'prenom' => $user->getPrenom(),
+            'nom' => $user->getNom(),
+            'email' => $user->getEmail(),
+            'telephone' => $user->getTelephone(),
+            'role' => $user->getRole(), 
+        ];
+        
+        include __DIR__ . '/../views/user/profile.php';
+    } 
 }

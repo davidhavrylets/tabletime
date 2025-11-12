@@ -1,5 +1,5 @@
 <div class="container">
-    <h2>Управление Столиками для: <?php echo htmlspecialchars($userRestaurant['nom'] ?? 'Вашего Ресторана'); ?></h2>
+    <h2>Gestion des Tables pour: <?php echo htmlspecialchars($userRestaurant['nom'] ?? 'Votre Restaurant'); ?></h2>
 
     <?php 
     if (isset($_SESSION['success_message'])): ?>
@@ -18,34 +18,34 @@
     ?>
     
     <hr>
-    
-    <h3>➕ Добавить Новый Столик</h3>
-    
+
+    <h3> Ajouter Nouveau Table</h3>
+
     <form action="?route=table/manage&restaurant_id=<?php echo htmlspecialchars($userRestaurant['id']); ?>" method="POST" style="margin-bottom: 30px;">
         
         <div class="form-group" style="margin-bottom: 15px;">
-             <label for="numero">Имя/Номер Столика:</label>
-             <input type="text" id="numero" name="numero" required placeholder="Напр. 'Столик 1' или 'Окно'">
+             <label for="numero">Nom/Numéro de la table:</label>
+             <input type="text" id="numero" name="numero" required placeholder="Ex. 'Table 1' ou 'Fenêtre'">
         </div>
 
         <div class="form-group">
-            <label for="capacite">Вместимость столика (Кол-во мест):</label>
+            <label for="capacite">Capacité de la table (Nombre de places):</label>
             <input type="number" id="capacite" name="capacite" required min="1">
         </div>
-        
-        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Добавить Столик</button>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Ajouter une table</button>
     </form>
     
-    <h3>📋 Ваши Столики</h3>
+    <h3> Vos Tables</h3>
     <?php if (empty($tables)): ?>
-        <p>У вас еще нет зарегистрированных столиков.</p>
+        <p>Vous n'avez pas encore de tables enregistrées.</p>
     <?php else: ?>
         <table class="table" border="1" cellpadding="10" cellspacing="0">
             <thead>
                 <tr>
-                    <th>Имя Столика</th> 
-                    <th>Вместимость</th>
-                    <th>Действия</th>
+                    <th>Nom de la table</th> 
+                    <th>Capacité</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -55,13 +55,13 @@
                         <td><?php echo htmlspecialchars($table['capacite']); ?> мест</td>
                         <td>
                             <a href="?route=table/edit&id=<?php echo $table['id']; ?>&restaurant_id=<?php echo $userRestaurant['id']; ?>" style="color: blue;">
-                                Редактировать
+                                Modifier
                             </a> | 
                             
                             <a href="?route=table/delete&id=<?php echo $table['id']; ?>&restaurant_id=<?php echo $userRestaurant['id']; ?>" 
-                               onclick="return confirm('Вы уверены, что хотите удалить столик \'<?php echo htmlspecialchars($table['numero']); ?>\'?');" 
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer la table \'<?php echo htmlspecialchars($table['numero']); ?>\'?');" 
                                style="color: red;">
-                                Удалить
+                                Supprimer
                             </a>
                         </td>
                     </tr>
@@ -72,6 +72,6 @@
     
     <br>
     <a href="?route=restaurant/list" class="btn btn-secondary">
-        &larr; Вернуться к списку ресторанов
+        &larr; Retour à la liste des restaurants
     </a>
 </div>

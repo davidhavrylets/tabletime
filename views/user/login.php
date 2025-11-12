@@ -1,6 +1,6 @@
 <div class="container">
     <div class="form-container">
-        <h1>Вход</h1>
+        <h1>Connexion</h1>
 
         <?php if (isset($error) && $error): ?>
             <div class="alert alert-error">
@@ -26,11 +26,11 @@
             </div>
             
             <div class="form-group">
-                <label for="password">Пароль:</label>
+                <label for="password">Mot de passe:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            
-            <button type="submit" class="btn btn-primary">Войти</button>
+
+            <button type="submit" class="btn btn-primary">Se connecter</button>
         </form>
     </div>
 </div>

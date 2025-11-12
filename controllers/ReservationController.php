@@ -15,7 +15,7 @@ class ReservationController {
      */
     public function list() {
         if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error_message'] = "Вы должны войти, чтобы просмотреть свои бронирования.";
+            $_SESSION['error_message'] = "Vous devez vous connecter pour consulter vos réservations.";
             header('Location: ?route=login');
             exit;
         }
@@ -29,6 +29,93 @@ class ReservationController {
     }
 
     
+public function edit() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'client') {
+            $_SESSION['error_message'] = "Vous n'avez pas les droits pour éditer les réservations.";
+            header('Location: ?route=home');
+            exit;
+        }
+
+        $reservationId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $userId = $_SESSION['user_id'];
+        $error = null;
+
+        $reservationModel = new ReservationManager();
+        $reservation = $reservationModel->getReservationById($reservationId);
+
+       
+        if (!$reservation || (int)$reservation['user_id'] !== (int)$userId) {
+            $_SESSION['error_message'] = "La réservation n'a pas été trouvée ou appartient à un autre utilisateur.";
+            header('Location: ?route=reservation/list');
+            exit;
+        }
+
+        
+        if ($reservation['statut'] !== 'en attente' && $reservation['statut'] !== 'confirmée') {
+            $_SESSION['error_message'] = "Cette réservation ne peut pas être éditée, car son statut est : " . htmlspecialchars($reservation['statut']);
+            header('Location: ?route=reservation/list');
+            exit;
+        }
+        
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            
+            $guests = filter_input(INPUT_POST, 'number_of_guests', FILTER_VALIDATE_INT);
+            $date = filter_input(INPUT_POST, 'reservation_date');
+            $time = filter_input(INPUT_POST, 'reservation_time');
+            $remarques = trim($_POST['remarques'] ?? '');
+
+           
+            if (!$guests || !$date || !$time || $guests <= 0) {
+                $error = "Tous les champs obligatoires doivent être remplis correctement.";
+            }
+
+            if (!$error) {
+                
+                $restaurantId = $reservation['restaurant_id'];
+                
+                
+                $tableId = $reservationModel->findAvailableTableForUpdate(
+                    $restaurantId, 
+                    $date, 
+                    $time, 
+                    $guests, 
+                    $reservationId 
+                );
+
+                if ($tableId) {
+                    
+                    if ($reservationModel->updateReservation($reservationId, $tableId, $date, $time, $guests, $remarques)) {
+                        $_SESSION['success_message'] = "Votre réservation a été mise à jour avec succès !";
+                        header('Location: ?route=reservation/list');
+                        exit;
+                    } else {
+                        $error = "Erreur lors de la mise à jour de la réservation dans la base de données.";
+                    }
+                } else {
+                    $error = "Malheureusement, il n'y a pas de tables disponibles pour l'heure et le nombre de convives sélectionnés.";
+                }
+            }
+
+           
+            if ($error) {
+               
+                $reservation['number_of_guests'] = $guests;
+                $reservation['reservation_date'] = $date;
+                $reservation['reservation_time'] = $time;
+                $reservation['remarques'] = $remarques;
+                $_SESSION['error_message'] = $error;
+            }
+        }
+        
+        
+        $restaurantModel = new Restaurant();
+        $restaurant = $restaurantModel->getRestaurantById($reservation['restaurant_id']);
+        
+        require_once __DIR__ . '/../views/reservation/edit_form.php';
+    }
+
     public function confirm() {
         
         if ($_SESSION['user_role'] !== 'owner') {
@@ -47,7 +134,7 @@ class ReservationController {
 
         $reservationDetails = $reservationModel->getReservationById($reservationId); 
         if (!$reservationDetails || !$restaurantModel->isOwnerOfRestaurant($userId, $reservationDetails['restaurant_id'])) {
-            $_SESSION['error_message'] = "У вас нет прав для управления этим бронированием.";
+            $_SESSION['error_message'] = "Vous n'avez pas les droits pour gérer cette réservation.";
             header('Location: ?route=reservation/manage');
             exit;
         }
@@ -145,18 +232,18 @@ class ReservationController {
             // --- БЛОК ВАЛИДАЦИИ ---
             
             if (!$restaurantId || !$guests || !$date || !$time) {
-                $error = "Все обязательные поля должны быть заполнены.";
+                $error = "Tous les champs obligatoires doivent être remplis.";
             }
 
             if ($guests <= 0) {
-                $error = "Количество гостей должно быть положительным.";
+                $error = "Le nombre de convives doit être positif.";
             }
             
             if (!$error) { 
                 $today = new DateTime('today');
                 $reservationDate = new DateTime($date);
                 if ($reservationDate < $today) {
-                    $error = "Дата бронирования не может быть в прошлом.";
+                    $error = "La date de réservation ne peut pas être passée.";
                 }
             }
 
@@ -164,9 +251,9 @@ class ReservationController {
                 list($hours, $minutes) = explode(':', $time);
                 $totalMinutes = (int)$hours * 60 + (int)$minutes;
                 
-                
-                if ($totalMinutes % 30 !== 0) { 
-                    $error = "Время бронирования должно быть кратно 30 минутам (например, 12:00 или 12:30).";
+
+                if ($totalMinutes % 30 !== 0) {
+                    $error = "L'heure de réservation doit être un multiple de 30 minutes (par exemple, 12:00 ou 12:30).";
                 }
             }
             
@@ -177,14 +264,14 @@ class ReservationController {
 
                 if ($tableId) {
                     if ($reservationModel->createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques)) {
-                        $_SESSION['success_message'] = "Ваше бронирование успешно создано! Ожидайте подтверждения.";
+                        $_SESSION['success_message'] = "Votre réservation a été créée avec succès ! Veuillez attendre la confirmation.";
                         header('Location: ?route=reservation/list'); 
                         exit;
                     } else {
-                        $error = "Ошибка при записи бронирования в базу данных.";
+                        $error = "Erreur lors de l'enregistrement de la réservation dans la base de données.";
                     }
                 } else {
-                    $error = "К сожалению, на выбранное время и количество гостей нет свободных столиков.";
+                    $error = "Malheureusement, il n'y a pas de tables disponibles pour l'heure et le nombre de convives sélectionnés.";
                 }
             }
             
@@ -197,24 +284,24 @@ class ReservationController {
             }
         } 
         
-        // --- Логика GET-запроса (она у вас правильная) ---
+        
        if (isset($_GET['restaurant_id'])) {
     
-    // ВАЖНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ: ищем 'restaurant_id' вместо 'id'
+    
     $restaurantId = filter_input(INPUT_GET, 'restaurant_id', FILTER_VALIDATE_INT);
     
-    // Получаем данные ресторана
+    
     $restaurant = $restaurantModel->getRestaurantById($restaurantId);
     
     if (!$restaurant) {
-        $_SESSION['error_message'] = "Ресторан не найден.";
+        $_SESSION['error_message'] = "Le restaurant n'a pas été sélectionné.";
         header('Location: ?route=home'); 
         exit;
     }
     
 // Если GET-параметр вообще не был передан, выводим ошибку
 } else {
-    $_SESSION['error_message'] = "Ресторан не выбран.";
+    $_SESSION['error_message'] = "Le restaurant n'a pas été sélectionné.";
     header('Location: ?route=home'); 
     exit;
 }
@@ -222,3 +309,4 @@ class ReservationController {
         require_once __DIR__ . '/../views/reservation/create.php';
     }
 }
+

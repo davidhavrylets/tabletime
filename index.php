@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -67,6 +65,17 @@ if ($route === 'home') {
 } else if ($route === 'reservation/list') {
     $controller = new ReservationController();
     $controller->list();
+} else if ($route === 'reservation/edit') { // <-- ДОБАВЛЕН НОВЫЙ МАРШРУТ
+    $controller = new ReservationController();
+    
+    // Проверяем наличие ID перед вызовом edit
+    if (isset($_GET['id'])) {
+        $controller->edit($_GET['id']);
+    } else {
+        // Если ID отсутствует, перенаправляем на список бронирований
+        header('Location: ?route=reservation/list');
+        exit;
+    }
 } else if ($route === 'reservation/manage') {
     $controller = new ReservationController();
     $controller->manage();
@@ -87,7 +96,7 @@ if ($route === 'home') {
 
 
 } else {
-    echo "404 - Страница не найдена.";
+    echo "404 - Page introuvable.";
 }
 
 require_once __DIR__ . '/views/layout/footer.php';

@@ -1,4 +1,4 @@
-<h1>Добро пожаловать в TableTime!</h1>
+<h1>Bienvenue à TableTime!</h1>
 <p>
-    Бронируйте столики в ваших любимых ресторанах.
+    Réservez des tables dans vos restaurants préférés.
 </p>

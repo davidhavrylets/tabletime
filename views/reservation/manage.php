@@ -1,5 +1,5 @@
 <div class="container">
-    <h1>Управление бронированиями ресторана</h1>
+    <h1>Gestion des réservations du restaurant</h1>
 
     <?php 
     
@@ -22,22 +22,22 @@
     <?php endif; ?>
     
     <?php if (isset($restaurant) && isset($reservations)): ?>
-        <h2>Бронирования для: <?php echo htmlspecialchars($restaurant['nom']); ?></h2>
+        <h2>Réservations pour : <?php echo htmlspecialchars($restaurant['nom']); ?></h2>
         
         <?php if (empty($reservations)): ?>
-            <p>На данный момент бронирования отсутствуют.</p>
+            <p>Il n'y a actuellement aucune réservation.</p>
         <?php else: ?>
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Клиент</th>
-                            <th>Дата</th>
-                            <th>Время</th>
-                            <th class="text-center">Гости</th>
-                            <th>Пожелания</th>
-                            <th class="text-center">Статус</th>
-                            <th class="text-center">Действия</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th class="text-center">Invités</th>
+                            <th>Souhaits</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,13 +48,13 @@
                             $statusClass = '';
                             
                             if ($status === 'en attente') {
-                                $statusText = 'В ожидании';
+                                $statusText = 'En attendant';
                                 $statusClass = 'text-warning';
                             } else if ($status === 'confirmée') {
-                                $statusText = 'Подтверждено';
+                                $statusText = 'Confirmée';
                                 $statusClass = 'text-success';
                             } else if ($status === 'annulée') {
-                                $statusText = 'Отменено';
+                                $statusText = 'Annulée';
                                 $statusClass = 'text-danger';
                             } else {
                                 $statusText = htmlspecialchars($status);
@@ -78,12 +78,12 @@
                             <td class="text-center">
                                 <?php if ($status === 'en attente'): ?>
                                     <a href="?route=reservation/confirm&id=<?php echo $reservation['id']; ?>" class="btn-link text-success">
-                                        Подтвердить
+                                        Confirmer
                                     </a>
                                     <a href="?route=reservation/cancel&id=<?php echo $reservation['id']; ?>" 
                                        class="btn-link text-danger" 
-                                       onclick="return confirm('Вы уверены, что хотите отменить бронирование?');">
-                                        Отменить
+                                       onclick="return confirm('Êtes-vous sûr de vouloir annuler votre réservation ?');">
+                                        Annuler
                                     </a>
                                 <?php else: ?>
                                     —
@@ -99,7 +99,7 @@
     <?php elseif (isset($error)): ?>
         <div class="alert alert-error"><?php echo $error; ?></div>
         <?php if (!isset($restaurant)): ?>
-            <p><a href="?route=restaurant/create" class="btn-link">Создать ресторан</a></p>
+            <p><a href="?route=restaurant/create" class="btn-link">Créer un restaurant</a></p>
         <?php endif; ?>
     <?php endif; ?>
 </div>
