@@ -30,18 +30,7 @@
             <div class="profile-card data-card">
                 <h2>Données personnelles</h2>
                 
-                <?php 
                 
-                $role = $user_data['role'] ?? 'client';
-                ?>
-                <p class="user-role-badge role-<?php echo htmlspecialchars($role); ?>">
-                    Rôle: 
-                    <strong>
-                        <?php 
-                            echo $role === 'owner' ? 'Propriétaire du restaurant 👑' : 'Client 🍽️'; 
-                        ?>
-                    </strong>
-                </p>
 
                 <form method="POST" action="?route=user/profile" class="styled-form profile-form">
                     

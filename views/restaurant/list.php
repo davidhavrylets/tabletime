@@ -23,6 +23,7 @@
     <?php if (empty($restaurants)): ?>
         <p>Vous n'avez pas encore de restaurants.</p>
     <?php else: ?>
+        <div class="table-container">
         <table class="table">
             <thead>
                 <tr>
@@ -55,5 +56,6 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <div class="table-container">
     <?php endif; ?>
 </div>

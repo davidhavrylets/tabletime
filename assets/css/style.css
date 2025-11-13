@@ -1,5 +1,3 @@
-/* assets/css/style.css - MODERN RESPONSIVE DESIGN */
-
 /* ================================================= */
 /* 0. CSS VARIABLES */
 /* ================================================= */
@@ -71,6 +69,9 @@ hr {
 /* ================================================= */
 /* 2. HEADER & NAVIGATION */
 /* ================================================= */
+
+
+
 header {
     background-color: var(--color-primary);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -561,6 +562,8 @@ table.table td .btn {
 .card-actions .btn {
     width: 100%;
 }
+
+
 
 /* ================================================= */
 /* 9. PROFILE LAYOUT */

@@ -1,15 +1,11 @@
 <?php
-// models/ReservationManager.php
-require_once __DIR__ . '/AbstractManager.php';
 
-require_once __DIR__ . '/Reservation.php'; 
+require_once __DIR__ . '/AbstractManager.php';
 
 class ReservationManager extends AbstractManager {
     
-
+    
     public function createReservation($userId, $restaurantId, $tableId, $date, $time, $guests, $remarques) {
-        
-        
         $sql = "INSERT INTO reservation (user_id, restaurant_id, table_id, reservation_date, reservation_time, number_of_guests, remarques, statut) 
                 VALUES (:user_id, :restaurant_id, :table_id, :reservation_date, :reservation_time, :number_of_guests, :remarques, 'en attente')";
         
@@ -26,6 +22,7 @@ class ReservationManager extends AbstractManager {
         return $stmt->execute();
     }
 
+   
     public function getReservationsByUserId($userId) {
         $sql = "SELECT r.*, rest.nom AS restaurant_nom 
                 FROM reservation r
@@ -38,6 +35,7 @@ class ReservationManager extends AbstractManager {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+   
     public function getReservationsByRestaurantId($restaurantId) {
         $sql = "SELECT r.*, u.nom AS user_nom, u.prenom AS user_prenom, t.numero AS table_numero
                 FROM reservation r
@@ -51,6 +49,7 @@ class ReservationManager extends AbstractManager {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+   
     public function getReservationById($reservationId) {
         $sql = "SELECT * FROM reservation WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -59,16 +58,16 @@ class ReservationManager extends AbstractManager {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    
     public function confirmReservation($reservationId) {
-        
         $sql = "UPDATE reservation SET statut = 'confirmée' WHERE id = :id AND statut = 'en attente'";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
         return $stmt->execute();
     }
 
+    
     public function cancelReservation($reservationId) {
-        
         $sql = "UPDATE reservation SET statut = 'annulée' WHERE id = :id AND statut != 'annulée'";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
@@ -83,15 +82,14 @@ class ReservationManager extends AbstractManager {
             LEFT JOIN reservation r ON t.id = r.table_id
                 AND r.reservation_date = :reservation_date
                 AND r.reservation_time = :reservation_time
-                AND r.statut != 'annulée' -- Игнорируем отмененные
+                AND r.statut != 'annulée'
             WHERE 
                 t.restaurant_id = :restaurant_id
                 AND t.capacite >= :guests
-                AND r.id IS NULL -- Ключевое условие: ищем, где НЕТ совпадения (столик свободен)
+                AND r.id IS NULL
             LIMIT 1
         ";
 
-       
         $stmt = $this->db->prepare($sql); 
         
         $stmt->bindParam(':restaurant_id', $restaurantId, PDO::PARAM_INT);
@@ -103,17 +101,61 @@ class ReservationManager extends AbstractManager {
         
         $table = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($table) {
-            return $table['id']; 
-        } else {
-            return false; 
-        }
+        return $table ? $table['id'] : false;
     }
     
    
-    public function getCommissionRate($restaurantId) {
-        return 0.10; // Пример
+    public function findAvailableTableForUpdate($restaurantId, $date, $time, $guests, $currentReservationId) {
+        $sql = "
+            SELECT t.id
+            FROM resto_table t
+            LEFT JOIN reservation r ON t.id = r.table_id
+                AND r.reservation_date = :reservation_date
+                AND r.reservation_time = :reservation_time
+                AND r.statut != 'annulée'
+                AND r.id != :current_reservation_id
+            WHERE 
+                t.restaurant_id = :restaurant_id
+                AND t.capacite >= :guests
+                AND r.id IS NULL
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':restaurant_id', $restaurantId, PDO::PARAM_INT);
+        $stmt->bindParam(':reservation_date', $date);
+        $stmt->bindParam(':reservation_time', $time);
+        $stmt->bindParam(':guests', $guests, PDO::PARAM_INT);
+        $stmt->bindParam(':current_reservation_id', $currentReservationId, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $table = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $table ? $table['id'] : false;
     }
 
-   
+    
+    public function updateReservation($reservationId, $tableId, $date, $time, $guests, $remarques) {
+        $sql = "UPDATE reservation 
+                SET table_id = :table_id, 
+                    reservation_date = :date, 
+                    reservation_time = :time, 
+                    number_of_guests = :guests, 
+                    remarques = :remarques 
+                WHERE id = :id";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':table_id', $tableId, PDO::PARAM_INT);
+        $stmt->bindParam(':date', $date);
+        $stmt->bindParam(':time', $time);
+        $stmt->bindParam(':guests', $guests, PDO::PARAM_INT);
+        $stmt->bindParam(':remarques', $remarques);
+        $stmt->bindParam(':id', $reservationId, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
+    
+    
+    public function getCommissionRate($restaurantId) {
+        return 0.10;
+    }
 }

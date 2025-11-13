@@ -24,20 +24,17 @@
                 // Логика статусов остается прежней
                 $status = $reservation['statut'];
                 $displayStatus = '';
-                $statusClass = ''; // Класс для подсветки/цвета
+                // $statusClass = ''; // УДАЛЕНА. Теперь стилизуем через $cardStatusClass
                 $cardStatusClass = ''; // Класс для привязки стилей CSS к карточке
                 
                 if ($status === 'en attente') {
                     $displayStatus = 'En attendant';
-                    $statusClass = 'text-warning'; 
-                    $cardStatusClass = 'status-en-attente'; // Используем французский для CSS-класса
+                    $cardStatusClass = 'status-en-attente'; 
                 } else if ($status === 'confirmée') {
                     $displayStatus = 'Confirmée';
-                    $statusClass = 'text-success'; 
                     $cardStatusClass = 'status-confirmée';
                 } else if ($status === 'annulée') {
                     $displayStatus = 'Annulée';
-                    $statusClass = 'text-danger'; 
                     $cardStatusClass = 'status-annulée';
                 } else {
                     $displayStatus = htmlspecialchars($status);
@@ -58,7 +55,7 @@
                 </div>
                 
                 <div class="card-status">
-                    <span class="status-badge <?php echo $statusClass; ?>">
+                    <span class="status-badge">
                         <?php echo $displayStatus; ?>
                     </span>
                 </div>

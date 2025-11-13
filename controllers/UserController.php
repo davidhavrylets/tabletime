@@ -44,12 +44,12 @@ class UserController {
                 $error = "Vous devez accepter la politique de confidentialité.";
             }
             
-            // --- ЛОГИКА ОПРЕДЕЛЕНИЯ РОЛИ ---
+            
             $role = 'client';
             if (!$error && !empty($ownerCode) && $ownerCode === $SECRET_CODE) {
                 $role = 'owner';
             }
-            // --- КОНЕЦ ЛОГИКИ ОПРЕДЕЛЕНИЯ РОЛИ ---
+            
             
             if (!$error) {
                 

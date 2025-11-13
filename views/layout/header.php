@@ -33,6 +33,7 @@
             <?php elseif ($_SESSION['user_role'] === 'owner'): ?>
                 <li><a href="?route=restaurant/list"><i class="fas fa-utensils"></i> Restaurants</a></li>
                 <li><a href="?route=reservation/manage"><i class="fas fa-tasks"></i> Reservations</a></li>
+                <li><a href="?route=user/profile"><i class="fas fa-user"></i> Profil (Propriétaire)</a></li>
                 <li><a href="?route=logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
             <?php endif; ?>
         <?php else: ?>
